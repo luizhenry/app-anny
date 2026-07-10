@@ -1,0 +1,120 @@
+@import "tailwindcss";
+
+@import url('https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400;700&family=Poppins:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap');
+
+:root {
+  --color-love: #e91e63;
+  --color-love-dark: #c2185b;
+  --color-pink-soft: #f8bbd0;
+  --color-lavender: #ce93d8;
+  --color-sky: #81d4fa;
+  --color-sunset: #ff8a65;
+  --color-night: #1a1a2e;
+  --color-night-light: #16213e;
+  --color-gold: #ffd700;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: 'Poppins', sans-serif;
+  overflow-x: hidden;
+  background: #0a0a0a;
+  color: white;
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(233, 30, 99, 0.5);
+  border-radius: 3px;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-20px); }
+}
+
+@keyframes sparkle {
+  0%, 100% { opacity: 0; transform: scale(0); }
+  50% { opacity: 1; transform: scale(1); }
+}
+
+@keyframes glow {
+  0%, 100% { box-shadow: 0 0 20px rgba(233, 30, 99, 0.3); }
+  50% { box-shadow: 0 0 40px rgba(233, 30, 99, 0.6); }
+}
+
+@keyframes petalFall {
+  0% { transform: translateY(-10vh) rotate(0deg); opacity: 1; }
+  100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+}
+
+@keyframes starTwinkle {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(30px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes breathe {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+}
+
+.font-script {
+  font-family: 'Dancing Script', cursive;
+}
+
+.font-display {
+  font-family: 'Playfair Display', serif;
+}
+
+.glass {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.glass-dark {
+  background: rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.gradient-love {
+  background: linear-gradient(135deg, #e91e63, #ce93d8, #81d4fa);
+}
+
+.gradient-night {
+  background: linear-gradient(135deg, #1a1a2e, #16213e, #0f3460);
+}
+
+.text-gradient {
+  background: linear-gradient(135deg, #e91e63, #ce93d8);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
