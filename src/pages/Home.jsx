@@ -1,255 +1,240 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
+import {
+  Globe, Heart, Flower2, Music, CloudSun, Gamepad2, Film, TreePine, LogOut
+} from 'lucide-react';
 
-const TypingGreeting = ({ text }) => {
-  const [displayed, setDisplayed] = useState('');
-
-  useEffect(() => {
-    let i = 0;
-    const interval = setInterval(() => {
-      if (i <= text.length) {
-        setDisplayed(text.slice(0, i));
-        i++;
-      } else {
-        clearInterval(interval);
-      }
-    }, 80);
-    return () => clearInterval(interval);
-  }, [text]);
-
-  return (
-    <span>
-      {displayed}
-      <motion.span
-        animate={{ opacity: [1, 0, 1] }}
-        transition={{ duration: 0.8, repeat: Infinity }}
-        className="inline-block w-[3px] h-[1em] bg-purple-600 ml-1 align-middle"
-      />
-    </span>
-  );
-};
-
-const FloatingParticle = ({ delay }) => (
-  <motion.div
-    className="absolute rounded-full pointer-events-none"
-    style={{
-      width: Math.random() * 6 + 3,
-      height: Math.random() * 6 + 3,
-      left: `${Math.random() * 100}%`,
-      background: `hsl(${Math.random() * 60 + 280}, 80%, 70%)`,
-    }}
-    initial={{ y: '105vh', opacity: 0 }}
-    animate={{
-      y: '-5vh',
-      opacity: [0, 0.6, 0.6, 0],
-    }}
-    transition={{
-      duration: 10 + Math.random() * 8,
-      delay,
-      repeat: Infinity,
-      ease: 'linear',
-    }}
-  />
-);
-
-const cards = [
+const sections = [
   {
-    emoji: '🌌',
-    title: 'Universo da Anne',
-    desc: 'Cada estrela é uma lembrança especial',
+    id: 'universo',
+    title: 'Universo Anne',
+    desc: 'Mensagens entre estrelas',
+    icon: Globe,
     path: '/universo',
-    gradient: 'from-indigo-500 via-purple-600 to-blue-700',
+    accent: 'from-violet-500/20 to-indigo-500/10',
+    border: 'rgba(139, 92, 246, 0.2)',
+    iconColor: 'text-violet-400',
   },
   {
-    emoji: '🌸',
+    id: 'jardim',
     title: 'Jardim Virtual',
-    desc: 'Flores que nascem a cada visita',
+    desc: 'Flores que crescem',
+    icon: Flower2,
     path: '/jardim',
-    gradient: 'from-pink-400 via-rose-500 to-pink-600',
+    accent: 'from-emerald-500/20 to-teal-500/10',
+    border: 'rgba(16, 185, 129, 0.2)',
+    iconColor: 'text-emerald-400',
   },
   {
-    emoji: '🎵',
+    id: 'spotify',
     title: 'Spotify da Vida',
-    desc: 'Cada música é uma carta',
+    desc: 'Cartas como músicas',
+    icon: Music,
     path: '/spotify',
-    gradient: 'from-green-400 via-emerald-500 to-teal-600',
+    accent: 'from-green-500/20 to-emerald-500/10',
+    border: 'rgba(34, 197, 94, 0.2)',
+    iconColor: 'text-green-400',
   },
   {
-    emoji: '😔',
-    title: 'Quando Estiver Triste',
-    desc: 'Botões para cada sentimento',
-    path: '/triste',
-    gradient: 'from-slate-400 via-blue-400 to-indigo-500',
+    id: 'triste',
+    title: 'Quando Triste',
+    desc: 'Mensagem para cada sentimento',
+    icon: Heart,
+    path: '/quando-triste',
+    accent: 'from-rose-500/20 to-pink-500/10',
+    border: 'rgba(244, 63, 94, 0.2)',
+    iconColor: 'text-rose-400',
   },
   {
-    emoji: '🌙',
-    title: 'Simulador de Céu',
-    desc: 'O céu muda, e os dias também',
+    id: 'ceu',
+    title: 'Simulador do Céu',
+    desc: 'O céu muda com você',
+    icon: CloudSun,
     path: '/ceu',
-    gradient: 'from-indigo-800 via-purple-700 to-blue-900',
+    accent: 'from-amber-500/20 to-orange-500/10',
+    border: 'rgba(245, 158, 11, 0.2)',
+    iconColor: 'text-amber-400',
   },
   {
-    emoji: '🦋',
+    id: 'borboleta',
     title: 'Jogo da Borboleta',
-    desc: 'Uma jornada de flores e mensagens',
+    desc: 'Explore as flores',
+    icon: Gamepad2,
     path: '/borboleta',
-    gradient: 'from-amber-400 via-orange-500 to-rose-500',
+    accent: 'from-fuchsia-500/20 to-purple-500/10',
+    border: 'rgba(217, 70, 239, 0.2)',
+    iconColor: 'text-fuchsia-400',
   },
   {
-    emoji: '🎬',
-    title: 'Netflix da Anny',
-    desc: 'Filmes que são cartas',
+    id: 'netflix',
+    title: 'Anneflix',
+    desc: 'Cartas como séries',
+    icon: Film,
     path: '/netflix',
-    gradient: 'from-red-600 via-red-700 to-black',
+    accent: 'from-red-500/20 to-rose-500/10',
+    border: 'rgba(239, 68, 68, 0.2)',
+    iconColor: 'text-red-400',
   },
   {
-    emoji: '🌷',
-    title: 'Jardim que Cresce',
-    desc: 'Cresce junto com você',
-    path: '/jardim-cresce',
-    gradient: 'from-lime-400 via-green-500 to-emerald-600',
+    id: 'cresce',
+    title: 'Jardim Que Cresce',
+    desc: 'Cresce com seus dias',
+    icon: TreePine,
+    path: '/cresce',
+    accent: 'from-lime-500/20 to-green-500/10',
+    border: 'rgba(132, 204, 22, 0.2)',
+    iconColor: 'text-lime-400',
   },
 ];
 
-const container = {
-  hidden: { opacity: 0 },
-  show: {
-    opacity: 1,
-    transition: {
-      staggerChildren: 0.1,
-    },
-  },
-};
-
-const item = {
-  hidden: { opacity: 0, y: 30, scale: 0.9 },
-  show: { opacity: 1, y: 0, scale: 1 },
-};
-
-const Home = () => {
+export default function Home() {
   const navigate = useNavigate();
-  const [userName, setUserName] = useState('Anny');
-
-  useEffect(() => {
-    const saved = localStorage.getItem('anny_name');
-    if (saved) {
-      setUserName(saved.charAt(0).toUpperCase() + saved.slice(1).toLowerCase());
-    }
-  }, []);
-
-  const particles = Array.from({ length: 20 }, (_, i) => ({
-    id: i,
-    delay: i * 0.8,
-  }));
 
   return (
-    <div className="min-h-screen w-full relative overflow-hidden"
-      style={{
-        background: 'linear-gradient(135deg, #fdf2f8 0%, #f3e8ff 30%, #ede9fe 60%, #fae8ff 100%)',
-      }}
-    >
-      {/* Background particles */}
-      {particles.map((p) => (
-        <FloatingParticle key={p.id} delay={p.delay} />
-      ))}
+    <div className="relative min-h-[100dvh] overflow-hidden">
+      {/* Mesh gradient */}
+      <div className="mesh-gradient-hero" />
 
-      <div className="relative z-10 px-4 py-8 max-w-4xl mx-auto">
-        {/* Logout */}
-        <motion.button
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 0.2 }}
-          onClick={() => { localStorage.removeItem('anny_name'); navigate('/'); }}
-          className="absolute top-6 left-4 z-50 px-4 py-2 rounded-full bg-white/20 backdrop-blur-md border border-white/30 text-sm text-purple-700 hover:bg-white/40 transition-colors"
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-        >
-          ← Sair
-        </motion.button>
+      {/* Noise overlay is global via index.css */}
 
+      <div className="relative z-10 max-w-5xl mx-auto px-5 sm:px-8 py-12 sm:py-20">
         {/* Header */}
         <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-          className="text-center mb-10"
+          className="mb-16 sm:mb-24"
+          initial={{ opacity: 0, y: 32, filter: 'blur(8px)' }}
+          animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+          transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
         >
-          <h1
-            className="text-4xl md:text-5xl font-bold text-purple-800 mb-2"
-            style={{ fontFamily: "'Dancing Script', cursive" }}
+          {/* Logout pill */}
+          <motion.button
+            onClick={() => {
+              localStorage.clear();
+              navigate('/');
+            }}
+            className="btn-ghost mb-10"
+            initial={{ opacity: 0, x: -12 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.3, duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
           >
-            <TypingGreeting text={`Olá, ${userName}!`} />
-          </h1>
-          <motion.p
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 1.5 }}
-            className="text-purple-600/70 text-lg"
+            <LogOut className="w-3.5 h-3.5" />
+            Sair
+          </motion.button>
+
+          {/* Title */}
+          <div className="flex items-end gap-4 mb-4">
+            <h1
+              className="font-display text-5xl sm:text-7xl lg:text-8xl leading-none tracking-tight"
+              style={{ color: 'var(--text-primary)' }}
+            >
+              Para Anny
+            </h1>
+            <motion.span
+              className="text-3xl sm:text-4xl"
+              animate={{ rotate: [0, 10, -10, 0] }}
+              transition={{ duration: 2, repeat: Infinity, repeatDelay: 4 }}
+            >
+              💕
+            </motion.span>
+          </div>
+
+          <p
+            className="text-base sm:text-lg max-w-md"
+            style={{ color: 'var(--text-secondary)', lineHeight: 1.7 }}
           >
-            Escolha um lugar especial para visitar ✨
-          </motion.p>
+            Cada seção é um pedaço do meu coração.
+            Escolha onde explorar.
+          </p>
         </motion.div>
 
-        {/* Cards grid */}
-        <motion.div
-          variants={container}
-          initial="hidden"
-          animate="show"
-          className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4"
-        >
-          {cards.map((card) => (
-            <motion.div key={card.path} variants={item}>
-              <Link to={card.path} className="block h-full">
-                <motion.div
-                  whileHover={{ scale: 1.05, y: -5 }}
-                  whileTap={{ scale: 0.97 }}
-                  className={`h-full min-h-[160px] md:min-h-[180px] rounded-2xl p-5 bg-gradient-to-br ${card.gradient} text-white cursor-pointer shadow-lg hover:shadow-2xl transition-shadow duration-300 flex flex-col justify-between relative overflow-hidden group`}
-                >
-                  {/* Glow overlay on hover */}
-                  <div className="absolute inset-0 bg-white/0 group-hover:bg-white/10 transition-all duration-300 rounded-2xl" />
+        {/* Bento Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
+          {sections.map((s, i) => {
+            const Icon = s.icon;
+            const isLarge = i === 0 || i === 5;
+
+            return (
+              <motion.button
+                key={s.id}
+                onClick={() => navigate(s.path)}
+                className={`card-double-bezel text-left group ${isLarge ? 'sm:col-span-2 lg:col-span-2' : ''}`}
+                initial={{ opacity: 0, y: 32, filter: 'blur(8px)' }}
+                animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+                transition={{
+                  delay: 0.15 + i * 0.08,
+                  duration: 0.9,
+                  ease: [0.16, 1, 0.3, 1],
+                }}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+              >
+                <div className="card-inner relative overflow-hidden">
+                  {/* Gradient bg */}
+                  <div
+                    className={`absolute inset-0 bg-gradient-to-br ${s.accent} opacity-0 group-hover:opacity-100 transition-opacity duration-700`}
+                    style={{ ease: 'var(--ease-spring)' }}
+                  />
 
                   <div className="relative z-10">
-                    <span className="text-3xl md:text-4xl block mb-3">{card.emoji}</span>
-                    <h3 className="font-bold text-sm md:text-base leading-tight mb-1">
-                      {card.title}
-                    </h3>
-                    <p className="text-white/80 text-xs leading-relaxed">{card.desc}</p>
-                  </div>
+                    {/* Icon */}
+                    <div
+                      className="w-10 h-10 rounded-full flex items-center justify-center mb-5 transition-transform duration-500 group-hover:scale-110"
+                      style={{
+                        background: 'rgba(255,255,255,0.04)',
+                        border: `1px solid ${s.border}`,
+                        transitionTimingFunction: 'var(--ease-spring)',
+                      }}
+                    >
+                      <Icon className={`w-4.5 h-4.5 ${s.iconColor}`} />
+                    </div>
 
-                  {/* Arrow */}
-                  <motion.div
-                    className="relative z-10 self-end mt-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-                    initial={false}
-                  >
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                    </svg>
-                  </motion.div>
-                </motion.div>
-              </Link>
-            </motion.div>
-          ))}
-        </motion.div>
+                    {/* Text */}
+                    <h3
+                      className="font-semibold text-sm mb-1 tracking-tight"
+                      style={{ color: 'var(--text-primary)' }}
+                    >
+                      {s.title}
+                    </h3>
+                    <p
+                      className="text-xs leading-relaxed"
+                      style={{ color: 'var(--text-muted)' }}
+                    >
+                      {s.desc}
+                    </p>
+
+                    {/* Arrow */}
+                    <motion.div
+                      className="mt-5 flex items-center gap-1.5 text-xs font-medium"
+                      style={{ color: 'var(--text-muted)' }}
+                    >
+                      <span className="group-hover:translate-x-1 transition-transform duration-500"
+                        style={{ transitionTimingFunction: 'var(--ease-spring)' }}
+                      >
+                        Explorar
+                      </span>
+                      <span className="group-hover:translate-x-1 transition-transform duration-500"
+                        style={{ transitionTimingFunction: 'var(--ease-spring)' }}
+                      >
+                        →
+                      </span>
+                    </motion.div>
+                  </div>
+                </div>
+              </motion.button>
+            );
+          })}
+        </div>
 
         {/* Footer */}
         <motion.p
+          className="text-center text-xs mt-16 sm:mt-24"
+          style={{ color: 'var(--text-muted)' }}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ delay: 1.5 }}
-          className="text-center text-purple-500/50 text-xs mt-12"
-          style={{ fontFamily: "'Dancing Script', cursive" }}
+          transition={{ delay: 1.5, duration: 1 }}
         >
-          Feito com amor por Luiz Henryque Alves Melo 💕
+          Feito com amor por Luiz Henryque Alves Melo
         </motion.p>
       </div>
-
-      <link
-        href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400;700&display=swap"
-        rel="stylesheet"
-      />
     </div>
   );
-};
-
-export default Home;
+}

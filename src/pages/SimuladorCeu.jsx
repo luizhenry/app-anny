@@ -1,338 +1,194 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
+import { ArrowLeft, Sun, Sunset, Moon, CloudSun } from 'lucide-react';
 
-const PERIODOS = {
-  manha: {
-    label: 'Manhã',
-    horaInicio: 5,
-    horaFim: 11,
-    gradiente: 'linear-gradient(180deg, #FF6B35 0%, #F7931E 25%, #FFD662 50%, #87CEEB 80%, #E0F0FF 100%)',
-    mensagem: 'Um novo dia começa. Você pode recomeçar a qualquer momento.',
-    sol: true,
-    estrelas: false,
-    nuvens: true,
-    passaros: true,
-    corSol: '#FFD662',
-  },
-  tarde: {
-    label: 'Tarde',
-    horaInicio: 12,
-    horaFim: 17,
-    gradiente: 'linear-gradient(180deg, #1E90FF 0%, #4DA6FF 30%, #87CEEB 60%, #B0E0FF 100%)',
-    mensagem: 'Respira fundo. Você tá indo bem, mesmo que não pareça.',
-    sol: true,
-    estrelas: false,
-    nuvens: true,
-    passaros: false,
-    corSol: '#FFD700',
-  },
-  entreter: {
-    label: 'Entertér',
-    horaInicio: 18,
-    horaFim: 20,
-    gradiente: 'linear-gradient(180deg, #FF4500 0%, #FF6347 20%, #FF7F50 40%, #DB7093 60%, #9370DB 80%, #6A5ACD 100%)',
-    mensagem: 'O sol se põe, mas sempre volta. Assim como os seus melhores dias.',
-    sol: true,
-    estrelas: false,
-    nuvens: true,
-    passaros: false,
-    corSol: '#FF6347',
-  },
-  noite: {
-    label: 'Noite',
-    horaInicio: 21,
-    horaFim: 4,
-    gradiente: 'linear-gradient(180deg, #0B0B3B 0%, #191970 30%, #2C1654 50%, #1A0A3E 70%, #0D0D2B 100%)',
-    mensagem: 'Mesmo na escuridão, tem estrelas. E você é uma delas.',
-    sol: false,
-    estrelas: true,
-    nuvens: false,
-    passaros: false,
-    corLuar: '#F5F5DC',
-  },
-};
-
-function obterPeriodo(hora) {
-  if (hora >= 5 && hora <= 11) return 'manha';
-  if (hora >= 12 && hora <= 17) return 'tarde';
-  if (hora >= 18 && hora <= 20) return 'entreter';
+function getTimeOfDay() {
+  const h = new Date().getHours();
+  if (h >= 5 && h < 8) return 'amanhecer';
+  if (h >= 8 && h < 17) return 'manha';
+  if (h >= 17 && h < 20) return 'entardecer';
   return 'noite';
 }
 
-function Sol({ cor }) {
-  return (
-    <motion.div
-      className="absolute"
-      style={{ top: '15%', left: '50%', transform: 'translateX(-50%)' }}
-      animate={{ y: [0, -8, 0], scale: [1, 1.05, 1] }}
-      transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
-    >
-      <div
-        className="w-24 h-24 md:w-32 md:h-32 rounded-full"
-        style={{
-          background: `radial-gradient(circle, ${cor} 0%, ${cor}CC 40%, ${cor}66 70%, transparent 100%)`,
-          boxShadow: `0 0 60px ${cor}AA, 0 0 120px ${cor}44`,
-        }}
-      />
-    </motion.div>
+const skies = {
+  amanhecer: {
+    icon: CloudSun,
+    gradient: 'linear-gradient(180deg, #1a1a2e 0%, #16213e 30%, #e94560 70%, #ff6b6b 100%)',
+    message: 'Um novo dia começa. Você pode recomeçar também.',
+    label: 'Amanhecer',
+    starOpacity: 0.1,
+  },
+  manha: {
+    icon: Sun,
+    gradient: 'linear-gradient(180deg, #4a90d9 0%, #7ec8e3 40%, #f0e68c 100%)',
+    message: 'O sol está forte. Assim como você.',
+    label: 'Manhã',
+    starOpacity: 0,
+  },
+  entardecer: {
+    icon: Sunset,
+    gradient: 'linear-gradient(180deg, #2d1b69 0%, #6b21a8 30%, #f97316 70%, #fbbf24 100%)',
+    message: 'O dia está acabando. Mas você fez de conta.',
+    label: 'Entardecer',
+    starOpacity: 0.15,
+  },
+  noite: {
+    icon: Moon,
+    gradient: 'linear-gradient(180deg, #050510 0%, #0a0a2e 40%, #1a1a4e 70%, #050510 100%)',
+    message: 'A noite é sua aliada. Descanse com ela.',
+    label: 'Noite',
+    starOpacity: 0.8,
+  },
+};
+
+function NightStars({ opacity }) {
+  const [stars] = useState(() =>
+    Array.from({ length: 60 }, () => ({
+      x: Math.random() * 100,
+      y: Math.random() * 70,
+      size: Math.random() * 1.5 + 0.5,
+      delay: Math.random() * 4,
+    }))
   );
-}
-
-function Lua() {
-  return (
-    <motion.div
-      className="absolute"
-      style={{ top: '12%', right: '20%' }}
-      animate={{ y: [0, -6, 0], rotate: [0, 2, 0] }}
-      transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut' }}
-    >
-      <div className="relative">
-        <div
-          className="w-20 h-20 md:w-24 md:h-24 rounded-full"
-          style={{
-            background: 'radial-gradient(circle at 35% 35%, #F5F5DC 0%, #E8E8C8 50%, #D4D4A8 100%)',
-            boxShadow: '0 0 40px #F5F5DC88, 0 0 80px #F5F5DC44',
-          }}
-        />
-        <div
-          className="absolute w-6 h-6 rounded-full"
-          style={{ top: '25%', left: '20%', background: '#D4D4A888' }}
-        />
-        <div
-          className="absolute w-4 h-4 rounded-full"
-          style={{ top: '50%', left: '55%', background: '#D4D4A866' }}
-        />
-        <div
-          className="absolute w-3 h-3 rounded-full"
-          style={{ top: '35%', left: '60%', background: '#D4D4A844' }}
-        />
-      </div>
-    </motion.div>
-  );
-}
-
-function Estrela({ top, left, delay, tamanho }) {
-  return (
-    <motion.div
-      className="absolute rounded-full bg-white"
-      style={{ top, left, width: tamanho, height: tamanho }}
-      animate={{ opacity: [0.3, 1, 0.3], scale: [0.8, 1.2, 0.8] }}
-      transition={{ duration: 2 + Math.random() * 2, repeat: Infinity, delay, ease: 'easeInOut' }}
-    />
-  );
-}
-
-function Estrelas() {
-  const estrelas = useMemo(() => {
-    const arr = [];
-    for (let i = 0; i < 50; i++) {
-      arr.push({
-        id: i,
-        top: `${Math.random() * 70}%`,
-        left: `${Math.random() * 100}%`,
-        delay: Math.random() * 3,
-        tamanho: `${2 + Math.random() * 3}px`,
-      });
-    }
-    return arr;
-  }, []);
 
   return (
-    <>
-      {estrelas.map((e) => (
-        <Estrela key={e.id} {...e} />
+    <div className="absolute inset-0 pointer-events-none" style={{ opacity }}>
+      {stars.map((s, i) => (
+        <motion.div
+          key={i}
+          className="absolute rounded-full bg-white"
+          style={{ left: `${s.x}%`, top: `${s.y}%`, width: s.size, height: s.size }}
+          animate={{ opacity: [0.3, 0.8, 0.3] }}
+          transition={{ duration: 2 + Math.random() * 2, repeat: Infinity, delay: s.delay }}
+        />
       ))}
-    </>
-  );
-}
-
-function Nuvem({ top, left, delay, scale = 1 }) {
-  return (
-    <motion.div
-      className="absolute"
-      style={{ top, left, transform: `scale(${scale})` }}
-      animate={{ x: [-20, 20, -20] }}
-      transition={{ duration: 12 + Math.random() * 8, repeat: Infinity, delay, ease: 'easeInOut' }}
-    >
-      <div className="relative">
-        <div className="w-20 h-8 bg-white/80 rounded-full" />
-        <div className="absolute -top-3 left-4 w-12 h-10 bg-white/80 rounded-full" />
-        <div className="absolute -top-1 left-10 w-10 h-8 bg-white/70 rounded-full" />
-      </div>
-    </motion.div>
-  );
-}
-
-function Passaro({ top, left, delay }) {
-  return (
-    <motion.div
-      className="absolute text-lg"
-      style={{ top, left }}
-      animate={{ x: [0, 80, 160], y: [0, -20, 0] }}
-      transition={{ duration: 6, repeat: Infinity, delay, ease: 'easeInOut' }}
-    >
-      <motion.span
-        animate={{ scaleY: [1, 0.5, 1] }}
-        transition={{ duration: 0.4, repeat: Infinity }}
-      >
-        ✦
-      </motion.span>
-    </motion.div>
+    </div>
   );
 }
 
 export default function SimuladorCeu() {
   const navigate = useNavigate();
-  const [periodoManual, setPeriodoManual] = useState(null);
-  const [mostrarMensagemFinal, setMostrarMensagemFinal] = useState(false);
-  const [horaAtual, setHoraAtual] = useState(new Date().getHours());
+  const [time, setTime] = useState(getTimeOfDay());
+  const sky = skies[time];
 
   useEffect(() => {
-    const interval = setInterval(() => setHoraAtual(new Date().getHours()), 60000);
-    return () => clearInterval(interval);
-  }, []);
-
-  const periodoChave = periodoManual || obterPeriodo(horaAtual);
-  const periodo = PERIODOS[periodoChave];
-
-  useEffect(() => {
-    setMostrarMensagemFinal(false);
-    const timer = setTimeout(() => setMostrarMensagemFinal(true), 4000);
-    return () => clearTimeout(timer);
-  }, [periodoChave]);
-
-  const mudarPeriodo = useCallback((chave) => {
-    setPeriodoManual(chave);
-  }, []);
+    const user = localStorage.getItem('user');
+    if (!user) navigate('/');
+  }, [navigate]);
 
   return (
-    <motion.div
-      className="fixed inset-0 overflow-hidden flex flex-col"
-      style={{ background: periodo.gradiente }}
-      animate={{ background: periodo.gradiente }}
-      transition={{ duration: 2 }}
-    >
-      {periodo.estrelas && <Estrelas />}
-
-      {periodo.sol && <Sol cor={periodo.corSol} />}
-      {!periodo.sol && <Lua />}
-
-      {periodo.nuvens && (
-        <>
-          <Nuvem top="20%" left="10%" delay={0} scale={0.8} />
-          <Nuvem top="30%" left="60%" delay={2} scale={1} />
-          <Nuvem top="25%" left="35%" delay={4} scale={0.6} />
-          <Nuvem top="40%" left="80%" delay={1} scale={0.9} />
-        </>
-      )}
-
-      {periodo.passaros && (
-        <>
-          <Passaro top="18%" left="15%" delay={0} />
-          <Passaro top="22%" left="25%" delay={1.5} />
-          <Passaro top="15%" left="40%" delay={3} />
-        </>
-      )}
-
-      <div className="relative z-10 flex flex-col items-center justify-center flex-1 px-6">
-        <motion.button
-          className="absolute top-6 left-6 bg-white/20 backdrop-blur-sm text-white px-4 py-2 rounded-full text-sm font-medium hover:bg-white/30 transition-colors"
-          onClick={() => navigate('/home')}
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-        >
-          ← Voltar
-        </motion.button>
-
+    <div className="relative min-h-[100dvh] overflow-hidden">
+      {/* Animated sky background */}
+      <AnimatePresence mode="wait">
         <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 1 }}
-          className="text-center mb-8"
-        >
-          <h1 className="text-3xl md:text-4xl font-bold text-white drop-shadow-lg mb-2">
-            Simulador de Céu
-          </h1>
-          <p className="text-white/70 text-sm">Toque nos botões para mudar o céu</p>
-        </motion.div>
+          key={time}
+          className="absolute inset-0"
+          style={{ background: sky.gradient }}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
+        />
+      </AnimatePresence>
 
+      {/* Stars (visible at night) */}
+      <NightStars opacity={sky.starOpacity} />
+
+      {/* Nav */}
+      <motion.div
+        className="absolute top-6 left-6 z-20"
+        initial={{ opacity: 0, x: -16 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ delay: 0.3, duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+      >
+        <button
+          onClick={() => navigate('/home')}
+          className="btn-ghost"
+          style={{ background: 'rgba(0,0,0,0.3)', backdropFilter: 'blur(12px)', border: '1px solid rgba(255,255,255,0.1)' }}
+        >
+          <ArrowLeft className="w-3.5 h-3.5" />
+          Voltar
+        </button>
+      </motion.div>
+
+      {/* Title */}
+      <motion.div
+        className="absolute top-6 left-1/2 -translate-x-1/2 z-20 text-center"
+        initial={{ opacity: 0, y: -16 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.5, duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+      >
+        <h1 className="font-display text-2xl sm:text-3xl" style={{ color: 'white', textShadow: '0 2px 12px rgba(0,0,0,0.4)' }}>
+          Simulador do Céu
+        </h1>
+      </motion.div>
+
+      {/* Center content */}
+      <div className="relative z-10 flex flex-col items-center justify-center min-h-[100dvh] px-5">
         <AnimatePresence mode="wait">
           <motion.div
-            key={periodoChave}
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.9 }}
-            transition={{ duration: 0.8 }}
-            className="bg-black/30 backdrop-blur-md rounded-2xl p-6 md:p-8 max-w-lg w-full text-center border border-white/10"
+            key={time}
+            className="text-center"
+            initial={{ opacity: 0, y: 24, filter: 'blur(8px)' }}
+            animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+            exit={{ opacity: 0, y: -16, filter: 'blur(4px)' }}
+            transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
           >
-            <motion.p
-              className="text-white/50 text-xs uppercase tracking-widest mb-3"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.3 }}
+            {/* Icon */}
+            <motion.div
+              className="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-8"
+              style={{
+                background: 'rgba(255,255,255,0.1)',
+                backdropFilter: 'blur(12px)',
+                border: '1px solid rgba(255,255,255,0.15)',
+              }}
+              animate={{ scale: [1, 1.05, 1] }}
+              transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
             >
-              {periodo.label}
-            </motion.p>
+              {(() => {
+                const Icon = sky.icon;
+                return <Icon className="w-9 h-9 text-white/90" />;
+              })()}
+            </motion.div>
 
-            <motion.p
-              className="text-white text-lg md:text-xl font-light leading-relaxed"
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.5, duration: 0.8 }}
-            >
-              {periodo.mensagem}
-            </motion.p>
-
-            <AnimatePresence>
-              {mostrarMensagemFinal && (
-                <motion.p
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.8 }}
-                  className="mt-6 text-white/60 text-sm italic border-t border-white/10 pt-4"
-                >
-                  Assim como o céu muda, os dias ruins também passam.
-                </motion.p>
-              )}
-            </AnimatePresence>
+            <h2 className="font-display text-4xl sm:text-5xl mb-4" style={{ color: 'white', textShadow: '0 2px 16px rgba(0,0,0,0.3)' }}>
+              {sky.label}
+            </h2>
+            <p className="text-base sm:text-lg max-w-xs mx-auto leading-relaxed" style={{ color: 'rgba(255,255,255,0.75)' }}>
+              {sky.message}
+            </p>
           </motion.div>
         </AnimatePresence>
       </div>
 
-      <div className="relative z-10 pb-8 px-4">
-        <div className="flex justify-center gap-2 flex-wrap">
-          {Object.entries(PERIODOS).map(([chave, p]) => (
-            <motion.button
-              key={chave}
-              onClick={() => mudarPeriodo(chave)}
-              className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
-                periodoChave === chave
-                  ? 'bg-white text-gray-900 shadow-lg'
-                  : 'bg-white/15 text-white/80 hover:bg-white/25'
-              }`}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
+      {/* Time selector pills */}
+      <motion.div
+        className="absolute bottom-8 left-1/2 -translate-x-1/2 z-20 flex gap-2 sm:gap-3"
+        initial={{ opacity: 0, y: 24 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.8, duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+      >
+        {Object.entries(skies).map(([key, s]) => {
+          const Icon = s.icon;
+          return (
+            <button
+              key={key}
+              onClick={() => setTime(key)}
+              className="w-12 h-12 sm:w-14 sm:h-14 rounded-full flex items-center justify-center transition-all duration-500"
+              style={{
+                background: time === key ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.3)',
+                backdropFilter: 'blur(12px)',
+                border: time === key ? '1px solid rgba(255,255,255,0.3)' : '1px solid rgba(255,255,255,0.08)',
+                transform: time === key ? 'scale(1.1)' : 'scale(1)',
+                transitionTimingFunction: 'var(--ease-spring)',
+              }}
             >
-              {chave === 'manha' && '🌅'}
-              {chave === 'tarde' && '☀️'}
-              {chave === 'entreter' && '🌇'}
-              {chave === 'noite' && '🌙'}
-              {' '}{p.label}
-            </motion.button>
-          ))}
-        </div>
-        {!periodoManual && (
-          <motion.p
-            className="text-white/40 text-xs text-center mt-3"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-          >
-            Mostrando céu atual ({horaAtual}h)
-          </motion.p>
-        )}
-      </div>
-    </motion.div>
+              <Icon className="w-5 h-5 text-white/80" />
+            </button>
+          );
+        })}
+      </motion.div>
+    </div>
   );
 }

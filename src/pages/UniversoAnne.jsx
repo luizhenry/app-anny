@@ -1,292 +1,193 @@
-import { useState, useEffect, useCallback, useRef } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
+import { ArrowLeft, Star, X } from 'lucide-react';
 
-const STARS_DATA = [
-  { id: 0, message: "Você tem um jeito de fazer qualquer lugar parecer mais leve.", x: 12, y: 18, size: 3 },
-  { id: 1, message: "Espero que um dia você enxergue em você o que eu enxergo.", x: 78, y: 25, size: 4 },
-  { id: 2, message: "Você é a pessoa mais especial que eu já conheci.", x: 45, y: 10, size: 3 },
-  { id: 3, message: "Mesmo nos dias difíceis, você continua sendo luz.", x: 88, y: 55, size: 3 },
-  { id: 4, message: "Seu sorriso pode iluminar qualquer escuridão.", x: 20, y: 60, size: 4 },
-  { id: 5, message: "Você merece todo o amor do mundo.", x: 60, y: 70, size: 3 },
-  { id: 6, message: "Eu tô aqui. Sempre vou estar.", x: 35, y: 45, size: 4 },
-  { id: 7, message: "Você é mais forte do que imagina.", x: 50, y: 30, size: 3 },
-  { id: 8, message: "Cada estrela aqui é um motivo pelo qual eu te amo.", x: 70, y: 42, size: 3 },
-  { id: 9, message: "O universo inteiro se torna mais bonito quando estou com você.", x: 15, y: 80, size: 3 },
+const messages = [
+  { title: 'Você é luz', text: 'Mesmo nos dias difíceis, você ilumina tudo ao redor.' },
+  { title: 'Respira', text: 'Tudo bem não estar bem. Eu estou aqui.' },
+  { title: 'Força', text: 'Você já superou 100% dos seus piores dias.' },
+  { title: 'Amor', text: 'Nada nesse mundo pode substituir o que você significa pra mim.' },
+  { title: 'Brilho', text: 'As estrelas não competem umas com as outras. Nem você precisa.' },
+  { title: 'Paz', text: 'O silêncio também é uma forma de cuidado.' },
+  { title: 'Coragem', text: 'Ser vulnerável já é ser forte demais.' },
+  { title: 'Leveza', text: 'Você não precisa carregar tudo sozinha.' },
+  { title: 'Esperança', text: 'Amanhã é um novo começo. E eu vou estar lá.' },
+  { title: 'Você importa', text: 'Seu sorriso faz o mundo ser um lugar melhor.' },
 ];
 
-const CONSTELLATION_LETTERS = {
-  A: [
-    [0, 0], [0.5, 1], [1, 0], [0.3, 0.6], [0.7, 0.6],
-  ],
-  N: [
-    [0, 0], [0, 1], [0.5, 0.5], [1, 0], [1, 1],
-  ],
-  E: [
-    [1, 0], [0, 0], [0, 0.5], [0.8, 0.5], [0, 1], [1, 1],
-  ],
-};
-
-function BackgroundStars() {
-  const stars = useRef(
-    Array.from({ length: 200 }, () => ({
+function StarField({ count = 80 }) {
+  const [stars] = useState(() =>
+    Array.from({ length: count }, () => ({
       x: Math.random() * 100,
       y: Math.random() * 100,
-      size: Math.random() * 2 + 1,
-      delay: Math.random() * 4,
+      size: Math.random() * 2 + 0.5,
+      delay: Math.random() * 5,
       duration: Math.random() * 3 + 2,
     }))
   );
 
   return (
     <div className="absolute inset-0 overflow-hidden pointer-events-none">
-      {stars.current.map((s, i) => (
+      {stars.map((s, i) => (
         <motion.div
           key={i}
           className="absolute rounded-full bg-white"
           style={{ left: `${s.x}%`, top: `${s.y}%`, width: s.size, height: s.size }}
-          animate={{ opacity: [0.2, 1, 0.2] }}
-          transition={{ duration: s.duration, delay: s.delay, repeat: Infinity, ease: "easeInOut" }}
+          animate={{ opacity: [0.2, 0.8, 0.2], scale: [0.8, 1.2, 0.8] }}
+          transition={{ duration: s.duration, repeat: Infinity, delay: s.delay, ease: 'easeInOut' }}
         />
       ))}
     </div>
   );
 }
 
-function Constellation({ show }) {
-  const allPoints = [];
-  const allLines = [];
-  let pointIdx = 0;
-  const letterWidth = 4;
-  const letterSpacing = 2;
-  const totalWidth = letterWidth * 3 + letterSpacing * 2;
-  const startX = (100 - totalWidth) / 2;
-
-  Object.entries(CONSTELLATION_LETTERS).forEach(([letter, pts], li) => {
-    const ox = startX + li * (letterWidth + letterSpacing);
-    const lines = [];
-    pts.forEach((p, pi) => {
-      allPoints.push({ x: ox + p[0] * letterWidth, y: 35 + p[1] * 20, idx: pointIdx });
-      if (pi > 0) lines.push([pointIdx - 1, pointIdx]);
-      pointIdx++;
-    });
-    allLines.push(...lines);
-  });
-
-  if (!show) return null;
-
-  return (
-    <motion.div
-      className="absolute inset-0 pointer-events-none"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 1 }}
-    >
-      <svg className="w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid meet">
-        {allLines.map(([a, b], i) => (
-          <motion.line
-            key={`l${i}`}
-            x1={allPoints[a].x}
-            y1={allPoints[a].y}
-            x2={allPoints[b].x}
-            y2={allPoints[b].y}
-            stroke="rgba(255,255,255,0.6)"
-            strokeWidth="0.15"
-            initial={{ pathLength: 0, opacity: 0 }}
-            animate={{ pathLength: 1, opacity: 1 }}
-            transition={{ duration: 0.8, delay: i * 0.15, ease: "easeOut" }}
-          />
-        ))}
-        {allPoints.map((p, i) => (
-          <motion.circle
-            key={`c${i}`}
-            cx={p.x}
-            cy={p.y}
-            r="0.5"
-            fill="#fde68a"
-            initial={{ scale: 0, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ duration: 0.4, delay: i * 0.1 + 0.5 }}
-          />
-        ))}
-      </svg>
-    </motion.div>
-  );
-}
-
 export default function UniversoAnne() {
   const navigate = useNavigate();
-  const [clickedStars, setClickedStars] = useState([]);
-  const [activeMessage, setActiveMessage] = useState(null);
-  const [showConstellation, setShowConstellation] = useState(false);
-  const [allClicked, setAllClicked] = useState(false);
-
-  const handleStarClick = useCallback(
-    (star) => {
-      if (clickedStars.includes(star.id)) return;
-      const next = [...clickedStars, star.id];
-      setClickedStars(next);
-      setActiveMessage(star);
-      if (next.length === STARS_DATA.length) {
-        setTimeout(() => {
-          setActiveMessage(null);
-          setAllClicked(true);
-          setTimeout(() => setShowConstellation(true), 600);
-        }, 2500);
-      }
-    },
-    [clickedStars]
-  );
+  const [selected, setSelected] = useState(null);
 
   useEffect(() => {
-    if (!activeMessage) return;
-    const t = setTimeout(() => setActiveMessage(null), 4000);
-    return () => clearTimeout(t);
-  }, [activeMessage]);
+    const user = localStorage.getItem('user');
+    if (!user) navigate('/');
+  }, [navigate]);
 
   return (
-    <div className="relative w-full min-h-screen overflow-hidden bg-[#0a0a0a] text-white">
-      <BackgroundStars />
+    <div className="relative min-h-[100dvh] overflow-hidden">
+      {/* Starfield */}
+      <StarField count={100} />
 
-      <motion.button
-        onClick={() => navigate("/home")}
-        className="absolute top-5 left-5 z-50 px-4 py-2 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-sm text-white/80 hover:bg-white/20 transition-colors"
-        initial={{ opacity: 0, x: -20 }}
-        animate={{ opacity: 1, x: 0 }}
-        transition={{ delay: 0.3 }}
-        whileHover={{ scale: 1.05 }}
-        whileTap={{ scale: 0.95 }}
-      >
-        ← Voltar
-      </motion.button>
-
-      <div className="relative z-10 flex flex-col items-center pt-16 px-4">
-        <motion.h1
-          className="text-3xl md:text-5xl font-bold bg-gradient-to-r from-yellow-200 via-amber-200 to-yellow-100 bg-clip-text text-transparent text-center mb-2"
-          initial={{ opacity: 0, y: -30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, ease: "easeOut" }}
-        >
-          Universo da Anne ✨
-        </motion.h1>
+      {/* Constellation hint */}
+      <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-0">
         <motion.p
-          className="text-white/50 text-sm mb-8 text-center"
+          className="font-display text-[80px] sm:text-[120px] lg:text-[160px] tracking-[0.3em] font-light select-none"
+          style={{ color: 'rgba(255,255,255,0.025)' }}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ delay: 0.4 }}
+          transition={{ duration: 3, delay: 1 }}
         >
-          Clique nas estrelas brilhantes para revelar mensagens
+          ANNE
         </motion.p>
-
-        <div className="text-white/40 text-xs mb-4">
-          {clickedStars.length} / {STARS_DATA.length} estrelas descobertas
-        </div>
       </div>
 
-      <div className="absolute inset-0 z-20">
-        {STARS_DATA.map((star) => {
-          const isClicked = clickedStars.includes(star.id);
-          return (
-            <motion.button
-              key={star.id}
-              className="absolute group"
-              style={{ left: `${star.x}%`, top: `${star.y}%` }}
-              onClick={() => handleStarClick(star)}
-              whileHover={{ scale: 2 }}
-              whileTap={{ scale: 0.8 }}
+      {/* Nav */}
+      <motion.div
+        className="absolute top-6 left-6 z-20"
+        initial={{ opacity: 0, x: -16 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ delay: 0.3, duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+      >
+        <button onClick={() => navigate('/home')} className="btn-ghost">
+          <ArrowLeft className="w-3.5 h-3.5" />
+          Voltar
+        </button>
+      </motion.div>
+
+      {/* Title */}
+      <motion.div
+        className="absolute top-6 left-1/2 -translate-x-1/2 z-20 text-center"
+        initial={{ opacity: 0, y: -16 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.5, duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+      >
+        <h1 className="font-display text-2xl sm:text-3xl" style={{ color: 'var(--text-primary)' }}>
+          Universo Anne
+        </h1>
+        <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>
+          Toque nas estrelas
+        </p>
+      </motion.div>
+
+      {/* Stars grid */}
+      <div className="relative z-10 flex flex-wrap justify-center items-center gap-5 sm:gap-8 min-h-[100dvh] px-8 pt-24 pb-16">
+        {messages.map((msg, i) => (
+          <motion.button
+            key={i}
+            onClick={() => setSelected(msg)}
+            className="group relative"
+            initial={{ opacity: 0, scale: 0.5, filter: 'blur(8px)' }}
+            animate={{ opacity: 1, scale: 1, filter: 'blur(0px)' }}
+            transition={{
+              delay: 0.3 + i * 0.08,
+              duration: 0.8,
+              ease: [0.16, 1, 0.3, 1],
+            }}
+            whileHover={{ scale: 1.15 }}
+            whileTap={{ scale: 0.9 }}
+          >
+            <div
+              className="w-14 h-14 sm:w-16 sm:h-16 rounded-full flex items-center justify-center transition-all duration-500"
+              style={{
+                background: 'radial-gradient(circle, rgba(244, 63, 94, 0.12) 0%, rgba(167, 139, 250, 0.06) 60%, transparent 100%)',
+                border: '1px solid rgba(255,255,255,0.08)',
+                boxShadow: '0 0 40px rgba(244, 63, 94, 0.06)',
+                transitionTimingFunction: 'var(--ease-spring)',
+              }}
             >
-              <motion.div
-                className="rounded-full cursor-pointer"
-                style={{
-                  width: star.size * 4,
-                  height: star.size * 4,
-                  background: isClicked
-                    ? "radial-gradient(circle, #fbbf24, #f59e0b)"
-                    : "radial-gradient(circle, #ffffff, #d1d5db)",
-                  boxShadow: isClicked
-                    ? "0 0 20px 4px rgba(251,191,36,0.6)"
-                    : "0 0 10px 2px rgba(255,255,255,0.3)",
-                }}
-                animate={
-                  isClicked
-                    ? { opacity: 1 }
-                    : { opacity: [0.4, 1, 0.4], scale: [0.9, 1.1, 0.9] }
-                }
-                transition={
-                  isClicked
-                    ? { duration: 0.3 }
-                    : { duration: 2 + Math.random() * 2, repeat: Infinity, ease: "easeInOut" }
-                }
-              />
-              {!isClicked && (
-                <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-white/60 opacity-0 group-hover:opacity-100 transition-opacity" />
-              )}
-            </motion.button>
-          );
-        })}
+              <Star className="w-5 h-5 text-rose-300/70 group-hover:text-rose-300 transition-colors duration-500" fill="currentColor" />
+            </div>
+            {/* Glow on hover */}
+            <div
+              className="absolute inset-0 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none"
+              style={{
+                background: 'radial-gradient(circle, rgba(244, 63, 94, 0.15) 0%, transparent 70%)',
+                transform: 'scale(2)',
+              }}
+            />
+          </motion.button>
+        ))}
       </div>
 
+      {/* Message modal */}
       <AnimatePresence>
-        {activeMessage && (
+        {selected && (
           <motion.div
-            className="absolute inset-0 z-40 flex items-center justify-center px-6"
+            className="fixed inset-0 z-50 flex items-center justify-center px-5"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.4 }}
+            transition={{ duration: 0.3 }}
           >
-            <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setActiveMessage(null)} />
+            {/* Backdrop */}
             <motion.div
-              className="relative max-w-md w-full p-8 rounded-3xl border border-white/20 text-center"
-              style={{
-                background: "linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0.03))",
-                backdropFilter: "blur(20px)",
-              }}
-              initial={{ scale: 0.5, opacity: 0, y: 30 }}
-              animate={{ scale: 1, opacity: 1, y: 0 }}
-              exit={{ scale: 0.8, opacity: 0, y: -20 }}
-              transition={{ type: "spring", damping: 20, stiffness: 200 }}
+              className="absolute inset-0"
+              style={{ background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(12px)' }}
+              onClick={() => setSelected(null)}
+            />
+
+            {/* Card */}
+            <motion.div
+              className="relative w-full max-w-sm card-double-bezel"
+              initial={{ opacity: 0, y: 24, scale: 0.95, filter: 'blur(8px)' }}
+              animate={{ opacity: 1, y: 0, scale: 1, filter: 'blur(0px)' }}
+              exit={{ opacity: 0, y: 16, scale: 0.97, filter: 'blur(4px)' }}
+              transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
             >
-              <motion.div
-                className="text-4xl mb-4"
-                animate={{ rotate: [0, 10, -10, 0], scale: [1, 1.2, 1] }}
-                transition={{ duration: 0.6 }}
-              >
-                ⭐
-              </motion.div>
-              <p className="text-lg md:text-xl leading-relaxed text-white/90 font-light italic">
-                "{activeMessage.message}"
-              </p>
-              <div className="mt-4 text-white/30 text-xs">
-                Estrela {clickedStars.length} de {STARS_DATA.length}
+              <div className="card-inner p-8 text-center">
+                <button
+                  onClick={() => setSelected(null)}
+                  className="absolute top-4 right-4 p-2 rounded-full transition-colors duration-300"
+                  style={{ color: 'var(--text-muted)', background: 'rgba(255,255,255,0.04)' }}
+                >
+                  <X className="w-4 h-4" />
+                </button>
+
+                <div
+                  className="w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-6"
+                  style={{
+                    background: 'linear-gradient(135deg, rgba(244, 63, 94, 0.15), rgba(167, 139, 250, 0.1))',
+                    border: '1px solid rgba(244, 63, 94, 0.2)',
+                  }}
+                >
+                  <Star className="w-5 h-5 text-rose-400" fill="currentColor" />
+                </div>
+
+                <h3 className="font-display text-2xl mb-3" style={{ color: 'var(--text-primary)' }}>
+                  {selected.title}
+                </h3>
+                <p className="text-sm leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
+                  {selected.text}
+                </p>
               </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      <Constellation show={showConstellation} />
-
-      <AnimatePresence>
-        {allClicked && (
-          <motion.div
-            className="absolute inset-0 z-30 flex items-center justify-center px-6 pointer-events-none"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: showConstellation ? 1 : 0 }}
-            transition={{ delay: 1, duration: 1 }}
-          >
-            <motion.div
-              className="text-center pointer-events-auto"
-              initial={{ y: 40 }}
-              animate={{ y: 0 }}
-              transition={{ delay: 1.5, duration: 0.8 }}
-            >
-              <p className="text-2xl md:text-4xl font-bold bg-gradient-to-r from-yellow-200 via-amber-300 to-yellow-200 bg-clip-text text-transparent mb-3">
-                A N N E
-              </p>
-              <p className="text-white/60 text-sm">
-                Todas as estrelas são suas. Todas são você.
-              </p>
             </motion.div>
           </motion.div>
         )}

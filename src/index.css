@@ -1,18 +1,54 @@
 @import "tailwindcss";
 
-@import url('https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400;700&family=Poppins:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap');
+/* ============================================================
+   DESIGN TOKENS — Ethereal Glass Archetype
+   ============================================================ */
 
 :root {
-  --color-love: #e91e63;
-  --color-love-dark: #c2185b;
-  --color-pink-soft: #f8bbd0;
-  --color-lavender: #ce93d8;
-  --color-sky: #81d4fa;
-  --color-sunset: #ff8a65;
-  --color-night: #1a1a2e;
-  --color-night-light: #16213e;
-  --color-gold: #ffd700;
+  /* === Background === */
+  --bg-deep: #050505;
+  --bg-surface: #0a0a0a;
+  --bg-raised: rgba(255, 255, 255, 0.02);
+  --bg-card: rgba(255, 255, 255, 0.03);
+  --bg-card-hover: rgba(255, 255, 255, 0.06);
+
+  /* === Accent Palette === */
+  --accent-rose: #f43f5e;
+  --accent-rose-light: #fb7185;
+  --accent-pink: #ec4899;
+  --accent-violet: #a78bfa;
+  --accent-lavender: #c4b5fd;
+
+  /* === Text === */
+  --text-primary: #fafafa;
+  --text-secondary: rgba(255, 255, 255, 0.55);
+  --text-muted: rgba(255, 255, 255, 0.30);
+
+  /* === Borders === */
+  --border-subtle: rgba(255, 255, 255, 0.06);
+  --border-hover: rgba(255, 255, 255, 0.12);
+
+  /* === Motion === */
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-out-quart: cubic-bezier(0.25, 1, 0.5, 1);
+  --ease-spring: cubic-bezier(0.32, 0.72, 0, 1);
+  --ease-elastic: cubic-bezier(0.68, -0.6, 0.32, 1.6);
+
+  /* === Blur === */
+  --blur-glass: 24px;
+  --blur-ultra: 64px;
+
+  /* === Radii === */
+  --radius-sm: 12px;
+  --radius-md: 20px;
+  --radius-lg: 28px;
+  --radius-xl: 36px;
+  --radius-full: 9999px;
 }
+
+/* ============================================================
+   BASE RESET
+   ============================================================ */
 
 * {
   margin: 0;
@@ -21,15 +57,234 @@
 }
 
 html {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
   scroll-behavior: smooth;
 }
 
 body {
-  font-family: 'Poppins', sans-serif;
+  font-family: 'Plus Jakarta Sans', 'DM Sans', system-ui, sans-serif;
+  background: var(--bg-deep);
+  color: var(--text-primary);
   overflow-x: hidden;
-  background: #0a0a0a;
-  color: white;
+  min-height: 100dvh;
 }
+
+/* ============================================================
+   NOISE TEXTURE OVERLAY
+   ============================================================ */
+
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  pointer-events: none;
+  opacity: 0.018;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+  background-repeat: repeat;
+  background-size: 256px;
+}
+
+/* ============================================================
+   TYPOGRAPHY
+   ============================================================ */
+
+.font-display {
+  font-family: 'Instrument Serif', Georgia, serif;
+}
+
+.font-body {
+  font-family: 'Plus Jakarta Sans', 'DM Sans', system-ui, sans-serif;
+}
+
+/* ============================================================
+   MESH GRADIENTS
+   ============================================================ */
+
+.mesh-gradient-hero {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  background:
+    radial-gradient(ellipse 80% 50% at 20% 40%, rgba(244, 63, 94, 0.12) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 40% at 80% 20%, rgba(167, 139, 250, 0.08) 0%, transparent 50%),
+    radial-gradient(ellipse 50% 60% at 50% 80%, rgba(236, 72, 153, 0.06) 0%, transparent 50%);
+  pointer-events: none;
+}
+
+.mesh-gradient-warm {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  background:
+    radial-gradient(ellipse 70% 50% at 30% 30%, rgba(244, 63, 94, 0.08) 0%, transparent 60%),
+    radial-gradient(ellipse 50% 40% at 70% 70%, rgba(236, 72, 153, 0.06) 0%, transparent 50%);
+  pointer-events: none;
+}
+
+/* ============================================================
+   DOUBLE-BEZEL CARD ARCHITECTURE
+   ============================================================ */
+
+.card-double-bezel {
+  position: relative;
+  border-radius: var(--radius-lg);
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  padding: 2px;
+  transition: border-color 0.5s var(--ease-spring), transform 0.5s var(--ease-spring);
+}
+
+.card-double-bezel:hover {
+  border-color: var(--border-hover);
+  transform: translateY(-2px);
+}
+
+.card-double-bezel > .card-inner {
+  border-radius: calc(var(--radius-lg) - 2px);
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  padding: 24px;
+  height: 100%;
+}
+
+/* ============================================================
+   GLASS PILL NAVBAR
+   ============================================================ */
+
+.nav-glass {
+  background: rgba(255, 255, 255, 0.04);
+  backdrop-filter: blur(var(--blur-glass));
+  -webkit-backdrop-filter: blur(var(--blur-glass));
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-full);
+  padding: 8px 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* ============================================================
+   BUTTONS
+   ============================================================ */
+
+.btn-magnetic {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 28px;
+  border-radius: var(--radius-full);
+  background: linear-gradient(135deg, var(--accent-rose), var(--accent-pink));
+  color: white;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-weight: 600;
+  font-size: 15px;
+  letter-spacing: -0.01em;
+  border: none;
+  cursor: pointer;
+  transition: transform 0.5s var(--ease-spring), box-shadow 0.5s var(--ease-spring);
+  overflow: hidden;
+}
+
+.btn-magnetic:hover {
+  transform: scale(1.04);
+  box-shadow: 0 8px 32px rgba(244, 63, 94, 0.25);
+}
+
+.btn-magnetic:active {
+  transform: scale(0.98);
+}
+
+.btn-magnetic .btn-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-full);
+  background: rgba(255, 255, 255, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.5s var(--ease-spring);
+}
+
+.btn-magnetic:hover .btn-icon {
+  transform: scale(1.1) rotate(-8deg);
+}
+
+.btn-ghost {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  border-radius: var(--radius-full);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-secondary);
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-weight: 500;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background 0.5s var(--ease-spring), color 0.5s var(--ease-spring), border-color 0.5s var(--ease-spring);
+}
+
+.btn-ghost:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text-primary);
+  border-color: var(--border-hover);
+}
+
+/* ============================================================
+   BLUR-UP SCROLL ENTRY ANIMATION
+   ============================================================ */
+
+@keyframes blurIn {
+  from {
+    opacity: 0;
+    transform: translateY(24px) scale(0.97);
+    filter: blur(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0);
+  }
+}
+
+.animate-blur-in {
+  animation: blurIn 0.8s var(--ease-out-expo) both;
+}
+
+/* ============================================================
+   GLOW / ORB EFFECTS
+   ============================================================ */
+
+@keyframes float {
+  0%, 100% { transform: translateY(0) scale(1); }
+  50% { transform: translateY(-12px) scale(1.02); }
+}
+
+@keyframes pulse-glow {
+  0%, 100% { opacity: 0.4; transform: scale(1); }
+  50% { opacity: 0.7; transform: scale(1.05); }
+}
+
+.animate-float {
+  animation: float 6s var(--ease-out-expo) infinite;
+}
+
+.animate-float-slow {
+  animation: float 10s var(--ease-out-expo) infinite;
+}
+
+.animate-pulse-glow {
+  animation: pulse-glow 4s var(--ease-out-expo) infinite;
+}
+
+/* ============================================================
+   SCROLLBAR
+   ============================================================ */
 
 ::-webkit-scrollbar {
   width: 6px;
@@ -40,81 +295,19 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(233, 30, 99, 0.5);
+  background: rgba(255, 255, 255, 0.1);
   border-radius: 3px;
 }
 
-@keyframes float {
-  0%, 100% { transform: translateY(0px); }
-  50% { transform: translateY(-20px); }
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.2);
 }
 
-@keyframes sparkle {
-  0%, 100% { opacity: 0; transform: scale(0); }
-  50% { opacity: 1; transform: scale(1); }
-}
+/* ============================================================
+   SELECTION
+   ============================================================ */
 
-@keyframes glow {
-  0%, 100% { box-shadow: 0 0 20px rgba(233, 30, 99, 0.3); }
-  50% { box-shadow: 0 0 40px rgba(233, 30, 99, 0.6); }
-}
-
-@keyframes petalFall {
-  0% { transform: translateY(-10vh) rotate(0deg); opacity: 1; }
-  100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
-}
-
-@keyframes starTwinkle {
-  0%, 100% { opacity: 0.3; }
-  50% { opacity: 1; }
-}
-
-@keyframes slideUp {
-  from { opacity: 0; transform: translateY(30px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-
-@keyframes breathe {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.05); }
-}
-
-.font-script {
-  font-family: 'Dancing Script', cursive;
-}
-
-.font-display {
-  font-family: 'Playfair Display', serif;
-}
-
-.glass {
-  background: rgba(255, 255, 255, 0.05);
-  backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.glass-dark {
-  background: rgba(0, 0, 0, 0.3);
-  backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-}
-
-.gradient-love {
-  background: linear-gradient(135deg, #e91e63, #ce93d8, #81d4fa);
-}
-
-.gradient-night {
-  background: linear-gradient(135deg, #1a1a2e, #16213e, #0f3460);
-}
-
-.text-gradient {
-  background: linear-gradient(135deg, #e91e63, #ce93d8);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+::selection {
+  background: rgba(244, 63, 94, 0.3);
+  color: white;
 }

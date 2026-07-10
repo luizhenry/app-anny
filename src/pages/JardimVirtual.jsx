@@ -1,232 +1,184 @@
-import { useState, useEffect, useMemo } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
+import { ArrowLeft, Flower2 } from 'lucide-react';
 
-const FLOWERS = ["🌸", "🌹", "🌷", "🌻", "🌺", "🌼", "💐", "🪷"];
-const STORAGE_KEY = "anny-flowers";
+const stages = [
+  { emoji: '🌱', label: 'Semente', min: 0 },
+  { emoji: '🌿', label: 'Brotinho', min: 3 },
+  { emoji: '🪴', label: 'Planta', min: 7 },
+  { emoji: '🌷', label: 'Botão', min: 14 },
+  { emoji: '🌹', label: 'Rosa', min: 25 },
+  { emoji: '💐', label: 'Buquê', min: 40 },
+  { emoji: '🌸', label: 'Flor Completa', min: 60 },
+];
 
-function FloatingPetals() {
-  const petals = useMemo(
-    () =>
-      Array.from({ length: 18 }, (_, i) => ({
-        id: i,
-        emoji: FLOWERS[Math.floor(Math.random() * FLOWERS.length)],
-        x: Math.random() * 100,
-        delay: Math.random() * 8,
-        duration: 8 + Math.random() * 6,
-        size: 14 + Math.random() * 14,
-        drift: (Math.random() - 0.5) * 60,
-      })),
-    []
-  );
-
-  return (
-    <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
-      {petals.map((p) => (
-        <motion.div
-          key={p.id}
-          className="absolute"
-          style={{ left: `${p.x}%`, fontSize: p.size }}
-          initial={{ y: "-10vh", x: 0, opacity: 0, rotate: 0 }}
-          animate={{
-            y: "110vh",
-            x: [0, p.drift, -p.drift / 2, p.drift / 3],
-            opacity: [0, 0.7, 0.7, 0],
-            rotate: [0, 180, 360],
-          }}
-          transition={{
-            duration: p.duration,
-            delay: p.delay,
-            repeat: Infinity,
-            ease: "linear",
-          }}
-        >
-          {p.emoji}
-        </motion.div>
-      ))}
-    </div>
-  );
-}
-
-function GrassBlades() {
-  const blades = useMemo(
-    () =>
-      Array.from({ length: 40 }, (_, i) => ({
-        id: i,
-        x: (i / 40) * 100 + (Math.random() - 0.5) * 2,
-        height: 30 + Math.random() * 40,
-        delay: Math.random() * 2,
-        shade: Math.random() > 0.5 ? "from-green-600" : "from-green-500",
-      })),
-    []
-  );
-
-  return (
-    <div className="absolute bottom-0 left-0 right-0 h-32 pointer-events-none">
-      {blades.map((b) => (
-        <motion.div
-          key={b.id}
-          className={`absolute bottom-0 w-1 bg-gradient-to-t ${b.shade} to-green-300 rounded-full origin-bottom`}
-          style={{ left: `${b.x}%`, height: b.height }}
-          animate={{ rotate: [-3, 3, -3] }}
-          transition={{ duration: 3 + Math.random() * 2, delay: b.delay, repeat: Infinity, ease: "easeInOut" }}
-        />
-      ))}
-    </div>
-  );
-}
-
-function FlowerDisplay({ flowers }) {
-  return (
-    <div className="flex flex-wrap justify-center gap-4 max-w-2xl mx-auto mb-8">
-      <AnimatePresence>
-        {flowers.map((entry, i) => (
-          <motion.div
-            key={entry.date}
-            className="flex flex-col items-center"
-            initial={{ scale: 0, opacity: 0, y: 30 }}
-            animate={{ scale: 1, opacity: 1, y: 0 }}
-            transition={{
-              type: "spring",
-              damping: 12,
-              stiffness: 150,
-              delay: i * 0.15,
-            }}
-          >
-            <motion.div
-              className="text-5xl md:text-6xl cursor-default"
-              whileHover={{ scale: 1.3, rotate: 10 }}
-              animate={{ y: [0, -6, 0] }}
-              transition={{
-                y: { duration: 2 + Math.random(), repeat: Infinity, ease: "easeInOut" },
-              }}
-            >
-              {entry.flower}
-            </motion.div>
-            <span className="text-white/40 text-xs mt-1">{entry.dateFormatted}</span>
-          </motion.div>
-        ))}
-      </AnimatePresence>
-    </div>
-  );
-}
+const messages = [
+  'Continue cuidando do seu jardim. Cada visita é uma regada.',
+  'Suas flores estão crescendo. Assim como você.',
+  'Um jardim bonito leva tempo. Tenha paciência consigo.',
+  'Cada flor que nasce é um lembrete: crescer leva tempo.',
+  'Você é o jardineiro mais dedicado que conheço.',
+  'Nem todas as flores precisam ser perfeitas pra serem lindas.',
+];
 
 export default function JardimVirtual() {
   const navigate = useNavigate();
-  const [flowers, setFlowers] = useState([]);
+  const [visitCount, setVisitCount] = useState(0);
+  const [currentStage, setCurrentStage] = useState(stages[0]);
 
   useEffect(() => {
-    const stored = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
-    const today = new Date().toISOString().split("T")[0];
-
-    if (!stored.find((f) => f.date === today)) {
-      const newFlower = {
-        date: today,
-        flower: FLOWERS[Math.floor(Math.random() * FLOWERS.length)],
-        dateFormatted: new Date().toLocaleDateString("pt-BR", { day: "2-digit", month: "short" }),
-      };
-      const updated = [...stored, newFlower];
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
-      setFlowers(updated);
-    } else {
-      setFlowers(stored);
+    const user = localStorage.getItem('user');
+    if (!user) {
+      navigate('/');
+      return;
     }
-  }, []);
+
+    const key = `garden_${user}`;
+    const stored = parseInt(localStorage.getItem(key) || '0', 10);
+    const newCount = stored + 1;
+    localStorage.setItem(key, String(newCount));
+    setVisitCount(newCount);
+
+    const stage = [...stages].reverse().find((s) => newCount >= s.min) || stages[0];
+    setCurrentStage(stage);
+  }, [navigate]);
+
+  const msg = messages[visitCount % messages.length];
 
   return (
-    <div className="relative w-full min-h-screen overflow-hidden bg-gradient-to-b from-emerald-900 via-green-900 to-pink-950 text-white">
-      <FloatingPetals />
+    <div className="relative min-h-[100dvh] overflow-hidden">
+      {/* Garden gradient */}
+      <div
+        className="absolute inset-0"
+        style={{
+          background: 'linear-gradient(180deg, #050510 0%, #0a1a0a 40%, #0d2818 70%, #051005 100%)',
+        }}
+      />
 
-      <motion.button
-        onClick={() => navigate("/home")}
-        className="absolute top-5 left-5 z-50 px-4 py-2 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-sm text-white/80 hover:bg-white/20 transition-colors"
-        initial={{ opacity: 0, x: -20 }}
+      {/* Nav */}
+      <motion.div
+        className="absolute top-6 left-6 z-20"
+        initial={{ opacity: 0, x: -16 }}
         animate={{ opacity: 1, x: 0 }}
-        transition={{ delay: 0.3 }}
-        whileHover={{ scale: 1.05 }}
-        whileTap={{ scale: 0.95 }}
+        transition={{ delay: 0.3, duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
       >
-        ← Voltar
-      </motion.button>
+        <button onClick={() => navigate('/home')} className="btn-ghost">
+          <ArrowLeft className="w-3.5 h-3.5" />
+          Voltar
+        </button>
+      </motion.div>
 
-      <div className="relative z-10 flex flex-col items-center pt-16 pb-48 px-4">
-        <motion.h1
-          className="text-3xl md:text-5xl font-bold text-center mb-2"
-          style={{
-            background: "linear-gradient(135deg, #fbcfe8, #f9a8d4, #a7f3d0)",
-            WebkitBackgroundClip: "text",
-            WebkitTextFillColor: "transparent",
-          }}
-          initial={{ opacity: 0, y: -30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8 }}
-        >
-          Jardim Virtual 🌿
-        </motion.h1>
-
-        <motion.p
-          className="text-white/50 text-sm mb-8 text-center max-w-md"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.4 }}
-        >
-          Cada visita planta uma nova flor
-        </motion.p>
-
+      <div className="relative z-10 flex flex-col items-center justify-center min-h-[100dvh] px-5">
+        {/* Title */}
         <motion.div
-          className="text-center mb-6"
+          className="text-center mb-12"
+          initial={{ opacity: 0, y: 24, filter: 'blur(8px)' }}
+          animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+          transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
+        >
+          <div className="flex items-center justify-center gap-3 mb-3">
+            <div
+              className="w-10 h-10 rounded-full flex items-center justify-center"
+              style={{
+                background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(34, 197, 94, 0.1))',
+                border: '1px solid rgba(16, 185, 129, 0.2)',
+              }}
+            >
+              <Flower2 className="w-4.5 h-4.5 text-emerald-400" />
+            </div>
+            <h1 className="font-display text-3xl sm:text-4xl" style={{ color: 'var(--text-primary)' }}>
+              Jardim Virtual
+            </h1>
+          </div>
+          <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
+            Suas flores crescem a cada visita
+          </p>
+        </motion.div>
+
+        {/* Flower display */}
+        <motion.div
+          className="relative mb-12"
           initial={{ opacity: 0, scale: 0.8 }}
           animate={{ opacity: 1, scale: 1 }}
-          transition={{ delay: 0.6 }}
+          transition={{ delay: 0.4, duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
         >
-          <span className="text-5xl md:text-6xl font-bold bg-gradient-to-r from-pink-300 to-green-300 bg-clip-text text-transparent">
-            {flowers.length}
-          </span>
-          <p className="text-white/60 text-sm mt-1">
-            {flowers.length === 1 ? "flor brotou no seu jardim" : "flores brotaram no seu jardim"}
+          {/* Glow ring */}
+          <div
+            className="absolute inset-0 -m-8 rounded-full animate-pulse-glow"
+            style={{
+              background: 'radial-gradient(circle, rgba(16, 185, 129, 0.12) 0%, transparent 70%)',
+            }}
+          />
+
+          <motion.div
+            className="w-32 h-32 sm:w-40 sm:h-40 rounded-full flex items-center justify-center relative"
+            style={{
+              background: 'rgba(16, 185, 129, 0.06)',
+              border: '1px solid rgba(16, 185, 129, 0.15)',
+            }}
+            animate={{ scale: [1, 1.03, 1] }}
+            transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
+          >
+            <motion.span
+              className="text-6xl sm:text-7xl"
+              key={currentStage.emoji}
+              initial={{ scale: 0.5, opacity: 0, rotate: -20 }}
+              animate={{ scale: 1, opacity: 1, rotate: 0 }}
+              transition={{ duration: 0.8, ease: [0.32, 0.72, 0, 1] }}
+            >
+              {currentStage.emoji}
+            </motion.span>
+          </motion.div>
+        </motion.div>
+
+        {/* Stage info */}
+        <motion.div
+          className="text-center mb-8"
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.6, duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+        >
+          <p className="font-display text-2xl mb-1" style={{ color: 'var(--text-primary)' }}>
+            {currentStage.label}
+          </p>
+          <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
+            {visitCount} {visitCount === 1 ? 'visita' : 'visitas'}
           </p>
         </motion.div>
 
-        <FlowerDisplay flowers={flowers} />
-
+        {/* Message card */}
         <motion.div
-          className="relative max-w-lg w-full p-8 rounded-3xl border border-white/10 text-center mt-4"
-          style={{
-            background: "linear-gradient(135deg, rgba(255,255,255,0.08), rgba(255,255,255,0.02))",
-            backdropFilter: "blur(12px)",
-          }}
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 1, duration: 0.8 }}
+          className="w-full max-w-sm card-double-bezel"
+          initial={{ opacity: 0, y: 24, filter: 'blur(6px)' }}
+          animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+          transition={{ delay: 0.8, duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
         >
-          <p className="text-xl md:text-2xl text-white/80 leading-relaxed" style={{ fontFamily: "Georgia, serif", fontStyle: "italic" }}>
-            "Mesmo quando os dias parecem cinzas, as coisas continuam crescendo."
-          </p>
-          <div className="mt-4 flex justify-center gap-1">
-            {["🌸", "🌿", "🌷", "🌻"].map((e, i) => (
-              <motion.span
-                key={i}
-                className="text-lg"
-                animate={{ y: [0, -5, 0] }}
-                transition={{ duration: 1.5, delay: i * 0.2, repeat: Infinity }}
-              >
-                {e}
-              </motion.span>
-            ))}
+          <div className="card-inner text-center p-6">
+            <p className="text-sm leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
+              {msg}
+            </p>
           </div>
         </motion.div>
-      </div>
 
-      <div className="absolute bottom-0 left-0 right-0 h-32 z-20">
-        <div
-          className="absolute bottom-0 left-0 right-0 h-20 rounded-t-[40%]"
-          style={{
-            background: "linear-gradient(to top, #166534, #15803d, transparent)",
-          }}
-        />
-      </div>
-      <div className="absolute bottom-0 left-0 right-0 z-30">
-        <GrassBlades />
+        {/* Progress dots */}
+        <motion.div
+          className="flex gap-2 mt-8"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 1, duration: 0.8 }}
+        >
+          {stages.map((s, i) => (
+            <div
+              key={i}
+              className="w-2 h-2 rounded-full transition-all duration-500"
+              style={{
+                background: visitCount >= s.min ? 'var(--accent-rose)' : 'rgba(255,255,255,0.1)',
+                transform: visitCount >= s.min ? 'scale(1.2)' : 'scale(1)',
+              }}
+            />
+          ))}
+        </motion.div>
       </div>
     </div>
   );

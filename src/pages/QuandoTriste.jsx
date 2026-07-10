@@ -1,262 +1,229 @@
-import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
+import { ArrowLeft, X, Heart, Zap, Moon, UserX } from 'lucide-react';
 
 const emotions = [
   {
-    id: 1,
-    icon: "😴",
-    label: "Quando estiver cansada",
-    gradient: "from-pink-500 to-rose-600",
-    shadowColor: "rgba(236, 72, 153, 0.35)",
-    message:
-      "Anny, tá na hora de descansar. Feche os olhos, respire fundo. O amanhã pode esperar. Hoje, cuide de você. Eu cuido de tudo.",
+    id: 'cansada',
+    label: 'Estou cansada',
+    icon: Moon,
+    accent: 'from-amber-500/20 to-orange-500/10',
+    border: 'rgba(245, 158, 11, 0.2)',
+    iconColor: 'text-amber-400',
+    messages: [
+      'Descanse. O mundo pode esperar.',
+      'Você merece um momento só pra você.',
+      'Não é fraqueza parar. É sabedoria.',
+      'Fechar os olhos por um tempo é um ato de amor próprio.',
+    ],
   },
   {
-    id: 2,
-    icon: "😔",
-    label: "Quando estiver triste",
-    gradient: "from-blue-500 to-purple-600",
-    shadowColor: "rgba(99, 102, 241, 0.35)",
-    message:
-      "Eu sei que dói. Não vou falar que vai passar porque agora tá doendo de verdade. Mas eu vou estar aqui. Do seu lado. Sempre. Sua tristeza é válida.",
+    id: 'triste',
+    label: 'Estou triste',
+    icon: Heart,
+    accent: 'from-blue-500/20 to-indigo-500/10',
+    border: 'rgba(59, 130, 246, 0.2)',
+    iconColor: 'text-blue-400',
+    messages: [
+      'Tudo bem sentir. Eu estou aqui.',
+      'Sua tristeza é válida. Não tenha vergonha dela.',
+      'Chorar também é corajoso.',
+      'Você não está sozinha nessa.',
+    ],
   },
   {
-    id: 3,
-    icon: "😡",
-    label: "Quando estiver com raiva",
-    gradient: "from-red-500 to-orange-500",
-    shadowColor: "rgba(239, 68, 68, 0.35)",
-    message:
-      "Sua raiva é válida. Você tem todo o direito de sentir. Mas lembra: nada disso define quem você é. Você é maior que qualquer raiva.",
+    id: 'raiva',
+    label: 'Estou com raiva',
+    icon: Zap,
+    accent: 'from-red-500/20 to-rose-500/10',
+    border: 'rgba(239, 68, 68, 0.2)',
+    iconColor: 'text-red-400',
+    messages: [
+      'Sua raiva é válida. Ela diz o que importa pra você.',
+      'Respire. Você é mais forte que qualquer situação.',
+      'Não guarde isso. Deixe sair.',
+      'Você tem todo o direito de se sentir assim.',
+    ],
   },
   {
-    id: 4,
-    icon: "❤️",
-    label: "Quando sentir que ninguém liga",
-    gradient: "from-amber-400 to-rose-500",
-    shadowColor: "rgba(251, 146, 60, 0.35)",
-    message:
-      "Eu ligo. Eu sempre ligo. Cada detalhe sobre você importa pra mim. Você não está sozinha. Nunca esteve. Eu tô aqui. Sempre vou estar.",
+    id: 'ninguem',
+    label: 'Ninguém liga',
+    icon: UserX,
+    accent: 'from-violet-500/20 to-purple-500/10',
+    border: 'rgba(139, 92, 246, 0.2)',
+    iconColor: 'text-violet-400',
+    messages: [
+      'Eu ligo. Sempre liguei.',
+      'Você importa mais do que imagina.',
+      'O mundo é melhor com você nele.',
+      'Às vezes sentimos isso, mas não é verdade.',
+    ],
   },
 ];
 
-const containerVariants = {
-  hidden: {},
-  visible: { transition: { staggerChildren: 0.12 } },
-};
-
-const cardVariants = {
-  hidden: { opacity: 0, y: 40, scale: 0.95 },
-  visible: { opacity: 1, y: 0, scale: 1, transition: { type: "spring", damping: 20, stiffness: 200 } },
-};
-
-const modalVariants = {
-  hidden: { opacity: 0, scale: 0.8, y: 30 },
-  visible: { opacity: 1, scale: 1, y: 0, transition: { type: "spring", damping: 24, stiffness: 280 } },
-  exit: { opacity: 0, scale: 0.9, y: 20, transition: { duration: 0.2 } },
-};
-
 export default function QuandoTriste() {
-  const [activeEmotion, setActiveEmotion] = useState(null);
-  const [readEmotions, setReadEmotions] = useState(new Set());
+  const navigate = useNavigate();
+  const [selected, setSelected] = useState(null);
+  const [currentMsg, setCurrentMsg] = useState(0);
 
-  const openEmotion = (emotion) => {
-    setActiveEmotion(emotion);
-    setReadEmotions((prev) => new Set([...prev, emotion.id]));
-  };
+  useEffect(() => {
+    const user = localStorage.getItem('user');
+    if (!user) navigate('/');
+  }, [navigate]);
 
-  const closeEmotion = () => {
-    setActiveEmotion(null);
-  };
-
-  const allRead = readEmotions.size >= emotions.length;
+  useEffect(() => {
+    if (!selected) return;
+    setCurrentMsg(0);
+    const interval = setInterval(() => {
+      setCurrentMsg((p) => (p + 1) % selected.messages.length);
+    }, 5000);
+    return () => clearInterval(interval);
+  }, [selected]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-neutral-950 via-neutral-900 to-neutral-950">
-      {/* Back Button */}
-      <a
-        href="/home"
-        className="fixed top-4 left-4 z-50 flex items-center gap-1 text-sm text-neutral-400 hover:text-white transition-colors"
+    <div className="relative min-h-[100dvh] overflow-hidden">
+      <div className="mesh-gradient-hero" />
+
+      {/* Nav */}
+      <motion.div
+        className="absolute top-6 left-6 z-20"
+        initial={{ opacity: 0, x: -16 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ delay: 0.3, duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
       >
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-          <path d="M19 12H5M12 19l-7-7 7-7" />
-        </svg>
-        Voltar
-      </a>
+        <button onClick={() => navigate('/home')} className="btn-ghost">
+          <ArrowLeft className="w-3.5 h-3.5" />
+          Voltar
+        </button>
+      </motion.div>
 
-      <div className="max-w-3xl mx-auto px-4 pt-20 pb-16">
-        {/* Header */}
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.7 }}
-          className="text-center mb-14"
-        >
-          <h1
-            className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-4 leading-tight"
-            style={{ fontFamily: "'Playfair Display', serif" }}
-          >
-            Quando você estiver triste...
-          </h1>
-          <p className="text-neutral-400 text-lg md:text-xl">
-            Escolha como você se sente agora
-          </p>
-          <div className="mt-6 mx-auto h-px w-32 bg-gradient-to-r from-transparent via-neutral-600 to-transparent" />
-        </motion.div>
+      {/* Title */}
+      <motion.div
+        className="absolute top-6 left-1/2 -translate-x-1/2 z-20 text-center"
+        initial={{ opacity: 0, y: -16 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.5, duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+      >
+        <h1 className="font-display text-2xl sm:text-3xl" style={{ color: 'var(--text-primary)' }}>
+          Quando Triste
+        </h1>
+        <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>
+          Como você se sente?
+        </p>
+      </motion.div>
 
-        {/* Emotion Cards */}
-        <motion.div
-          variants={containerVariants}
-          initial="hidden"
-          animate="visible"
-          className="grid grid-cols-1 md:grid-cols-2 gap-5"
-        >
-          {emotions.map((emotion) => (
+      {/* Emotion cards */}
+      <div className="relative z-10 flex flex-col items-center justify-center min-h-[100dvh] px-5 pt-24 pb-16 gap-4 sm:gap-5 max-w-md mx-auto">
+        {emotions.map((e, i) => {
+          const Icon = e.icon;
+          return (
             <motion.button
-              key={emotion.id}
-              variants={cardVariants}
-              whileHover={{ scale: 1.03, y: -4 }}
-              whileTap={{ scale: 0.97 }}
-              onClick={() => openEmotion(emotion)}
-              className="relative group rounded-2xl p-8 text-left overflow-hidden cursor-pointer border border-white/5"
-              style={{ boxShadow: `0 8px 32px ${emotion.shadowColor}` }}
+              key={e.id}
+              onClick={() => setSelected(e)}
+              className="w-full card-double-bezel text-left group"
+              initial={{ opacity: 0, y: 24, filter: 'blur(8px)' }}
+              animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+              transition={{ delay: 0.3 + i * 0.1, duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
             >
-              {/* Gradient Background */}
-              <div className={`absolute inset-0 bg-gradient-to-br ${emotion.gradient} opacity-20 group-hover:opacity-30 transition-opacity duration-300`} />
-
-              {/* Content */}
-              <div className="relative z-10">
-                <span className="text-5xl mb-4 block">{emotion.icon}</span>
-                <h3 className="text-xl font-semibold text-white leading-snug">
-                  {emotion.label}
-                </h3>
-              </div>
-
-              {/* Read indicator */}
-              {readEmotions.has(emotion.id) && (
-                <div className="absolute top-4 right-4 z-10">
-                  <div className="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3">
-                      <polyline points="20 6 9 17 4 12" />
-                    </svg>
-                  </div>
+              <div className="card-inner flex items-center gap-4">
+                <div
+                  className="w-10 h-10 rounded-full flex items-center justify-center shrink-0 transition-transform duration-500 group-hover:scale-110"
+                  style={{
+                    background: 'rgba(255,255,255,0.04)',
+                    border: `1px solid ${e.border}`,
+                    transitionTimingFunction: 'var(--ease-spring)',
+                  }}
+                >
+                  <Icon className={`w-4.5 h-4.5 ${e.iconColor}`} />
                 </div>
-              )}
-
-              {/* Shine effect */}
-              <div className="absolute -inset-px rounded-2xl bg-gradient-to-br from-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
-            </motion.button>
-          ))}
-        </motion.div>
-
-        {/* Completion Message */}
-        <AnimatePresence>
-          {allRead && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3, duration: 0.6 }}
-              className="mt-14 text-center"
-            >
-              <div className="inline-block rounded-2xl bg-white/5 backdrop-blur-sm border border-white/10 px-8 py-6">
-                <p className="text-xl md:text-2xl text-white leading-relaxed">
-                  Você não está sozinha, Anny.
-                  <br />
-                  Eu sempre vou estar aqui.{" "}
-                  <span className="inline-block">💕</span>
-                </p>
+                <div>
+                  <h3 className="font-semibold text-sm" style={{ color: 'var(--text-primary)' }}>
+                    {e.label}
+                  </h3>
+                </div>
               </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+            </motion.button>
+          );
+        })}
       </div>
 
-      {/* Message Modal */}
+      {/* Message modal */}
       <AnimatePresence>
-        {activeEmotion && (
-          <MessageModal emotion={activeEmotion} onClose={closeEmotion} />
+        {selected && (
+          <motion.div
+            className="fixed inset-0 z-50 flex items-center justify-center px-5"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.3 }}
+          >
+            <motion.div
+              className="absolute inset-0"
+              style={{ background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(12px)' }}
+              onClick={() => setSelected(null)}
+            />
+
+            <motion.div
+              className="relative w-full max-w-sm card-double-bezel"
+              initial={{ opacity: 0, y: 24, scale: 0.95, filter: 'blur(8px)' }}
+              animate={{ opacity: 1, y: 0, scale: 1, filter: 'blur(0px)' }}
+              exit={{ opacity: 0, y: 16, scale: 0.97, filter: 'blur(4px)' }}
+              transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+            >
+              <div className="card-inner p-8 text-center">
+                <button
+                  onClick={() => setSelected(null)}
+                  className="absolute top-4 right-4 p-2 rounded-full transition-colors duration-300"
+                  style={{ color: 'var(--text-muted)', background: 'rgba(255,255,255,0.04)' }}
+                >
+                  <X className="w-4 h-4" />
+                </button>
+
+                <div
+                  className={`w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-6 bg-gradient-to-br ${selected.accent}`}
+                  style={{ border: `1px solid ${selected.border}` }}
+                >
+                  {(() => {
+                    const Icon = selected.icon;
+                    return <Icon className={`w-6 h-6 ${selected.iconColor}`} />;
+                  })()}
+                </div>
+
+                <AnimatePresence mode="wait">
+                  <motion.p
+                    key={currentMsg}
+                    className="text-base leading-relaxed"
+                    style={{ color: 'var(--text-secondary)' }}
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -8 }}
+                    transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+                  >
+                    {selected.messages[currentMsg]}
+                  </motion.p>
+                </AnimatePresence>
+
+                {/* Dots */}
+                <div className="flex justify-center gap-2 mt-6">
+                  {selected.messages.map((_, i) => (
+                    <div
+                      key={i}
+                      className="w-1.5 h-1.5 rounded-full transition-all duration-500"
+                      style={{
+                        background: i === currentMsg ? 'var(--accent-rose)' : 'rgba(255,255,255,0.15)',
+                        transform: i === currentMsg ? 'scale(1.3)' : 'scale(1)',
+                      }}
+                    />
+                  ))}
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
         )}
       </AnimatePresence>
     </div>
-  );
-}
-
-function MessageModal({ emotion, onClose }) {
-  return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      className="fixed inset-0 z-50 flex items-center justify-center p-4"
-      style={{ backgroundColor: "rgba(0,0,0,0.6)", backdropFilter: "blur(16px)" }}
-      onClick={onClose}
-    >
-      <motion.div
-        variants={modalVariants}
-        initial="hidden"
-        animate="visible"
-        exit="exit"
-        onClick={(e) => e.stopPropagation()}
-        className="relative w-full max-w-lg rounded-2xl overflow-hidden"
-      >
-        {/* Gradient Glow Background */}
-        <div className={`absolute inset-0 bg-gradient-to-br ${emotion.gradient} opacity-100`} />
-        <div className="absolute inset-0 bg-black/40" />
-
-        {/* Soft Glow */}
-        <div
-          className="absolute -inset-20 blur-3xl opacity-30"
-          style={{
-            background: `radial-gradient(circle, ${emotion.shadowColor} 0%, transparent 70%)`,
-          }}
-        />
-
-        {/* Content */}
-        <div className="relative z-10 p-10">
-          {/* Close Button */}
-          <button
-            onClick={onClose}
-            className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-full bg-black/30 text-white/80 hover:text-white hover:bg-black/50 transition-colors"
-          >
-            ✕
-          </button>
-
-          {/* Icon */}
-          <motion.div
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            transition={{ type: "spring", delay: 0.15, damping: 12, stiffness: 200 }}
-            className="text-6xl mb-6"
-          >
-            {emotion.icon}
-          </motion.div>
-
-          {/* Label */}
-          <h2
-            className="text-2xl md:text-3xl font-bold text-white mb-6 leading-tight"
-            style={{ fontFamily: "'Playfair Display', serif" }}
-          >
-            {emotion.label}
-          </h2>
-
-          {/* Message */}
-          <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6">
-            <p className="text-white text-lg leading-relaxed">
-              {emotion.message}
-            </p>
-          </div>
-
-          {/* Close Hint */}
-          <motion.p
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.5 }}
-            className="text-center text-white/40 text-sm mt-6"
-          >
-            Toque fora para fechar
-          </motion.p>
-        </div>
-      </motion.div>
-    </motion.div>
   );
 }

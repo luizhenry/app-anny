@@ -1,269 +1,219 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
+import { ArrowRight, Heart, Sparkles } from 'lucide-react';
 import { logToSheets } from '../config/sheets';
 
-const FloatingHeart = ({ delay, x, size, duration }) => (
-  <motion.div
-    className="absolute pointer-events-none select-none"
-    initial={{ y: '110vh', x: `${x}vw`, opacity: 0, rotate: 0 }}
-    animate={{
-      y: '-10vh',
-      opacity: [0, 1, 1, 0],
-      rotate: [0, 15, -15, 10, 0],
-      x: [`${x}vw`, `${x + 5}vw`, `${x - 5}vw`, `${x + 3}vw`],
-    }}
-    transition={{
-      duration,
-      delay,
-      repeat: Infinity,
-      ease: 'easeInOut',
-    }}
-    style={{ fontSize: size }}
-  >
-    💖
-  </motion.div>
-);
-
-const Sparkle = ({ delay, x, y }) => (
-  <motion.div
-    className="absolute pointer-events-none"
-    initial={{ opacity: 0, scale: 0 }}
-    animate={{
-      opacity: [0, 1, 0],
-      scale: [0, 1.2, 0],
-    }}
-    transition={{
-      duration: 2,
-      delay,
-      repeat: Infinity,
-      ease: 'easeInOut',
-    }}
-    style={{ left: `${x}%`, top: `${y}%` }}
-  >
-    ✨
-  </motion.div>
-);
-
-const Login = () => {
+export default function Login() {
   const [name, setName] = useState('');
-  const [isLogging, setIsLogging] = useState(false);
-  const [showWelcome, setShowWelcome] = useState(false);
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  const handleLogin = async () => {
-    const trimmed = name.trim();
-    if (!trimmed) return;
+  const validNames = ['anny', 'anne', 'karoline', 'anny karoline'];
 
-    const validNames = ['anny', 'anne', 'karoline'];
-    const lower = trimmed.toLowerCase();
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setError('');
 
-    if (!validNames.includes(lower)) {
-      alert('Esse nome não está na lista 💔');
+    const clean = name.trim().toLowerCase();
+
+    if (!validNames.includes(clean)) {
+      setError('Esse nome não está na lista de convidados 💔');
+      setLoading(false);
       return;
     }
 
-    setIsLogging(true);
-
-    await logToSheets({ name: trimmed, action: 'login' });
-
-    localStorage.setItem('anny_name', trimmed);
-    setShowWelcome(true);
-
-    setTimeout(() => {
-      navigate('/home');
-    }, 1800);
+    await logToSheets(clean);
+    localStorage.setItem('user', clean);
+    localStorage.setItem(`visit_${clean}`, Date.now());
+    navigate('/home');
   };
 
-  const hearts = Array.from({ length: 14 }, (_, i) => ({
-    id: i,
-    delay: i * 1.2,
-    x: Math.random() * 90 + 5,
-    size: Math.random() * 20 + 14,
-    duration: 8 + Math.random() * 6,
-  }));
-
-  const sparkles = Array.from({ length: 10 }, (_, i) => ({
-    id: i,
-    delay: Math.random() * 4,
-    x: Math.random() * 100,
-    y: Math.random() * 100,
-  }));
+  const orbs = [
+    { size: 300, x: '10%', y: '20%', color: 'rgba(244, 63, 94, 0.08)', delay: 0 },
+    { size: 250, x: '80%', y: '60%', color: 'rgba(167, 139, 250, 0.06)', delay: 2 },
+    { size: 200, x: '50%', y: '80%', color: 'rgba(236, 72, 153, 0.07)', delay: 4 },
+  ];
 
   return (
-    <div className="min-h-screen w-full flex items-center justify-center overflow-hidden relative"
-      style={{
-        background: 'linear-gradient(135deg, #f9c6d4 0%, #c8a2e8 30%, #d8b4fe 60%, #f0abfc 100%)',
-      }}
-    >
-      {/* Animated background pulse */}
-      <motion.div
-        className="absolute inset-0"
-        animate={{
-          background: [
-            'linear-gradient(135deg, #f9c6d4 0%, #c8a2e8 30%, #d8b4fe 60%, #f0abfc 100%)',
-            'linear-gradient(135deg, #f0abfc 0%, #d8b4fe 30%, #c8a2e8 60%, #f9c6d4 100%)',
-            'linear-gradient(135deg, #f9c6d4 0%, #c8a2e8 30%, #d8b4fe 60%, #f0abfc 100%)',
-          ],
-        }}
-        transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut' }}
-      />
+    <div className="relative min-h-[100dvh] flex items-center justify-center overflow-hidden">
+      {/* Mesh gradient background */}
+      <div className="mesh-gradient-hero" />
 
-      {/* Floating hearts */}
-      {hearts.map((h) => (
-        <FloatingHeart key={h.id} {...h} />
-      ))}
-
-      {/* Sparkles */}
-      {sparkles.map((s) => (
-        <Sparkle key={s.id} {...s} />
-      ))}
-
-      {/* Welcome overlay */}
-      <AnimatePresence>
-        {showWelcome && (
-          <motion.div
-            className="absolute inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-          >
-            <motion.div
-              initial={{ scale: 0, rotate: -10 }}
-              animate={{ scale: 1, rotate: 0 }}
-              transition={{ type: 'spring', stiffness: 200, damping: 15 }}
-              className="text-center"
-            >
-              <motion.p
-                className="text-5xl md:text-7xl font-bold text-white drop-shadow-lg"
-                style={{ fontFamily: "'Dancing Script', cursive" }}
-                animate={{ scale: [1, 1.05, 1] }}
-                transition={{ duration: 1, repeat: Infinity }}
-              >
-                Bem-vinda, Anny! 💕
-              </motion.p>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Login card */}
-      <motion.div
-        initial={{ opacity: 0, y: 40, scale: 0.9 }}
-        animate={{ opacity: 1, y: 0, scale: 1 }}
-        transition={{ duration: 0.8, ease: 'easeOut' }}
-        className="relative z-10 w-[90vw] max-w-md mx-4"
-      >
-        <div
-          className="rounded-3xl p-8 md:p-10 shadow-2xl border border-white/40"
+      {/* Floating orbs */}
+      {orbs.map((orb, i) => (
+        <motion.div
+          key={i}
+          className="absolute rounded-full"
           style={{
-            background: 'rgba(255, 255, 255, 0.15)',
-            backdropFilter: 'blur(20px)',
-            WebkitBackdropFilter: 'blur(20px)',
+            width: orb.size,
+            height: orb.size,
+            left: orb.x,
+            top: orb.y,
+            background: `radial-gradient(circle, ${orb.color} 0%, transparent 70%)`,
           }}
-        >
-          <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-            className="text-center mb-8"
-          >
-            <motion.h1
-              className="text-3xl md:text-4xl text-purple-900 font-bold mb-2"
-              style={{ fontFamily: "'Dancing Script', cursive" }}
-              animate={{
-                textShadow: [
-                  '0 0 10px rgba(147, 51, 234, 0.3)',
-                  '0 0 20px rgba(147, 51, 234, 0.5)',
-                  '0 0 10px rgba(147, 51, 234, 0.3)',
-                ],
-              }}
-              transition={{ duration: 2, repeat: Infinity }}
-            >
-              Para: Anny Karoline
-            </motion.h1>
-            <p className="text-purple-700/80 text-sm mt-2">Um presente feito com carinho 💝</p>
-          </motion.div>
+          animate={{
+            y: [0, -20, 0],
+            scale: [1, 1.05, 1],
+            opacity: [0.5, 0.8, 0.5],
+          }}
+          transition={{
+            duration: 8,
+            repeat: Infinity,
+            delay: orb.delay,
+            ease: [0.16, 1, 0.3, 1],
+          }}
+        />
+      ))}
 
-          <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.5 }}
-            className="mb-6"
-          >
-            <label className="block text-purple-800 text-sm font-medium mb-2">
-              Qual é o seu nome?
-            </label>
-            <input
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && handleLogin()}
-              placeholder="Digite seu nome..."
-              className="w-full px-4 py-3 rounded-xl bg-white/30 border border-white/50 text-purple-900 placeholder-purple-400/60 focus:outline-none focus:ring-2 focus:ring-purple-400/60 focus:border-transparent transition-all duration-300 text-center text-lg"
-              disabled={isLogging}
-            />
-          </motion.div>
-
-          <motion.button
-            onClick={handleLogin}
-            disabled={isLogging || !name.trim()}
-            whileHover={{ scale: 1.03 }}
-            whileTap={{ scale: 0.97 }}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.7 }}
-            className="w-full py-3.5 rounded-xl font-bold text-white text-lg disabled:opacity-50 disabled:cursor-not-allowed relative overflow-hidden transition-all duration-300"
-            style={{
-              background: 'linear-gradient(135deg, #a855f7, #ec4899, #a855f7)',
-              backgroundSize: '200% 200%',
-            }}
-          >
+      {/* Main card */}
+      <motion.div
+        className="relative z-10 w-full max-w-md mx-4"
+        initial={{ opacity: 0, y: 40, filter: 'blur(12px)' }}
+        animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+        transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
+      >
+        {/* Double-bezel card */}
+        <div className="card-double-bezel">
+          <div className="card-inner p-8 sm:p-10">
+            {/* Logo / Icon */}
             <motion.div
-              className="absolute inset-0 rounded-xl"
-              animate={{
-                boxShadow: [
-                  '0 0 20px rgba(168, 85, 247, 0.4)',
-                  '0 0 40px rgba(236, 72, 153, 0.6)',
-                  '0 0 20px rgba(168, 85, 247, 0.4)',
-                ],
-              }}
-              transition={{ duration: 2, repeat: Infinity }}
-            />
-            <span className="relative z-10">
-              {isLogging ? (
-                <motion.span
-                  animate={{ opacity: [1, 0.5, 1] }}
-                  transition={{ duration: 0.8, repeat: Infinity }}
+              className="flex justify-center mb-8"
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ delay: 0.3, duration: 0.8, ease: [0.32, 0.72, 0, 1] }}
+            >
+              <div
+                className="w-16 h-16 rounded-full flex items-center justify-center"
+                style={{
+                  background: 'linear-gradient(135deg, rgba(244, 63, 94, 0.15), rgba(236, 72, 153, 0.1))',
+                  border: '1px solid rgba(244, 63, 94, 0.2)',
+                }}
+              >
+                <Heart className="w-7 h-7 text-rose-400" fill="currentColor" />
+              </div>
+            </motion.div>
+
+            {/* Title */}
+            <motion.div
+              className="text-center mb-10"
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.5, duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+            >
+              <h1
+                className="font-display text-4xl sm:text-5xl mb-3 tracking-tight"
+                style={{ color: 'var(--text-primary)' }}
+              >
+                Para Anny
+              </h1>
+              <p
+                className="text-sm tracking-wide uppercase"
+                style={{ color: 'var(--text-muted)', letterSpacing: '0.15em' }}
+              >
+                Um espaço especial
+              </p>
+            </motion.div>
+
+            {/* Form */}
+            <form onSubmit={handleSubmit}>
+              <motion.div
+                className="mb-6"
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.7, duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+              >
+                <label
+                  className="block text-xs font-medium mb-2 tracking-wide uppercase"
+                  style={{ color: 'var(--text-muted)' }}
                 >
-                  Entrando...
-                </motion.span>
-              ) : (
-                'Entrar ✨'
-              )}
-            </span>
-          </motion.button>
+                  Seu nome
+                </label>
+                <input
+                  type="text"
+                  value={name}
+                  onChange={(e) => {
+                    setName(e.target.value);
+                    setError('');
+                  }}
+                  placeholder="Digite seu nome"
+                  className="w-full px-5 py-3.5 rounded-2xl text-sm outline-none transition-all duration-500"
+                  style={{
+                    background: 'rgba(255, 255, 255, 0.03)',
+                    border: '1px solid var(--border-subtle)',
+                    color: 'var(--text-primary)',
+                    fontFamily: "'Plus Jakarta Sans', sans-serif",
+                  }}
+                  onFocus={(e) => {
+                    e.target.style.borderColor = 'rgba(244, 63, 94, 0.3)';
+                    e.target.style.background = 'rgba(255, 255, 255, 0.05)';
+                  }}
+                  onBlur={(e) => {
+                    e.target.style.borderColor = 'var(--border-subtle)';
+                    e.target.style.background = 'rgba(255, 255, 255, 0.03)';
+                  }}
+                />
+                <AnimatePresence>
+                  {error && (
+                    <motion.p
+                      className="text-xs mt-3 flex items-center gap-1.5"
+                      style={{ color: 'var(--accent-rose-light)' }}
+                      initial={{ opacity: 0, y: -8 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -8 }}
+                      transition={{ duration: 0.3 }}
+                    >
+                      <Sparkles className="w-3 h-3" />
+                      {error}
+                    </motion.p>
+                  )}
+                </AnimatePresence>
+              </motion.div>
+
+              {/* Submit button */}
+              <motion.div
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.9, duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+              >
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="btn-magnetic w-full justify-center"
+                >
+                  {loading ? (
+                    <motion.div
+                      className="w-5 h-5 rounded-full border-2 border-white/30 border-t-white"
+                      animate={{ rotate: 360 }}
+                      transition={{ duration: 0.8, repeat: Infinity, ease: 'linear' }}
+                    />
+                  ) : (
+                    <>
+                      <span>Entrar</span>
+                      <span className="btn-icon">
+                        <ArrowRight className="w-4 h-4" />
+                      </span>
+                    </>
+                  )}
+                </button>
+              </motion.div>
+            </form>
+
+            {/* Footer credit */}
+            <motion.p
+              className="text-center text-xs mt-8"
+              style={{ color: 'var(--text-muted)' }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 1.2, duration: 1 }}
+            >
+              Feito com amor por Luiz Henryque
+            </motion.p>
+          </div>
         </div>
       </motion.div>
-
-      {/* Footer */}
-      <motion.p
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 1.2 }}
-        className="absolute bottom-6 text-center text-purple-800/60 text-xs px-4"
-        style={{ fontFamily: "'Dancing Script', cursive" }}
-      >
-        Feito com amor por Luiz Henryque Alves Melo 💕
-      </motion.p>
-
-      {/* Google Fonts */}
-      <link
-        href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400;700&display=swap"
-        rel="stylesheet"
-      />
     </div>
   );
-};
-
-export default Login;
+}
